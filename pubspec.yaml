@@ -1,0 +1,28 @@
+name: impactly_new
+description: A new Flutter project for Impactly with cleaned folder structure and authentication UI.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  intl: ^0.20.2
+  parse_server_sdk_flutter: ^10.7.0
+  image_picker: ^1.1.2
+  cached_network_image: ^3.4.1
+  provider: ^6.1.2
+  flutter_dotenv: ^5.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env

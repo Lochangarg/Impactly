@@ -1,0 +1,205 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+
+class ParseService {
+  static Set<String> joinedEventIds = {};
+
+   // --- USER ---
+  static Future<ParseUser?> getCurrentUser() async {
+    return await ParseUser.currentUser() as ParseUser?;
+  }
+
+  static Future<void> _rewardUser(int amount) async {
+    final user = await getCurrentUser();
+    if (user == null) return;
+    
+    final currentPoints = user.get<int>('points') ?? 0;
+    final totalPoints = currentPoints + amount;
+    
+    user.set('points', totalPoints);
+    
+    // Level up logic (e.g., Level up every 500 points)
+    final newLevel = (totalPoints / 500).floor() + 1;
+    user.set('level', newLevel);
+    
+    await user.save();
+  }
+
+  // --- EVENTS ---
+  static Future<List<ParseObject>> fetchEvents({String? category, String? searchQuery}) async {
+    final query = QueryBuilder<ParseObject>(ParseObject('Events'));
+    if (category != null && category != 'All') {
+      query.whereEqualTo('category', category);
+    }
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      query.whereContains('title', searchQuery);
+    }
+    query.includeObject(['createdBy']);
+    query.orderByDescending('createdAt');
+    final response = await query.query();
+    return response.success ? (response.results?.cast<ParseObject>() ?? []) : [];
+  }
+
+  static Future<List<ParseObject>> fetchRecommendedEvents(List<dynamic> interests) async {
+    final query = QueryBuilder<ParseObject>(ParseObject('Events'));
+    if (interests.isNotEmpty) {
+      query.whereContainedIn('category', interests);
+    }
+    query.includeObject(['createdBy']);
+    query.orderByDescending('createdAt');
+    query.setLimit(5);
+    final response = await query.query();
+    return response.success ? (response.results?.cast<ParseObject>() ?? []) : [];
+  }
+
+  static Future<bool> isUserJoined(ParseObject event) async {
+    final user = await getCurrentUser();
+    if (user == null) return false;
+
+    final query = QueryBuilder<ParseObject>(ParseObject('UserEvents'))
+      ..whereEqualTo('user', user)
+      ..whereEqualTo('event', event);
+
+    final response = await query.query();
+    return response.success && response.results != null && response.results!.isNotEmpty;
+  }
+
+  static Future<bool> joinEvent(ParseObject event) async {
+    final user = await getCurrentUser();
+    if (user == null) return false;
+
+    // Prevent duplicate join
+    if (joinedEventIds.contains(event.objectId)) {
+      return true;
+    }
+
+    final query = QueryBuilder<ParseObject>(ParseObject('UserEvents'))
+      ..whereEqualTo('user', user)
+      ..whereEqualTo('event', event);
+
+    final checkResponse = await query.query();
+    if (checkResponse.results != null && checkResponse.results!.isNotEmpty) {
+      if (event.objectId != null) joinedEventIds.add(event.objectId!);
+      return true;
+    }
+
+    final userEvent = ParseObject('UserEvents')
+      ..set('user', user)
+      ..set('event', event)
+      ..set('joinedAt', DateTime.now());
+    
+    final response = await userEvent.save();
+    if (response.success && event.objectId != null) {
+      joinedEventIds.add(event.objectId!);
+      // 🏆 Reward for joining
+      await _rewardUser(50);
+    }
+    return response.success;
+  }
+
+  static Future<Set<String>> getJoinedEventIds() async {
+    final user = await getCurrentUser();
+    if (user == null) {
+      joinedEventIds = {};
+      return {};
+    }
+
+    final query = QueryBuilder<ParseObject>(ParseObject('UserEvents'))
+      ..whereEqualTo('user', user)
+      ..includeObject(['event']);
+    
+    final response = await query.query();
+    if (!response.success || response.results == null) return joinedEventIds;
+
+    joinedEventIds = response.results!
+        .map((e) => (e as ParseObject).get<ParseObject>('event')?.objectId)
+        .where((id) => id != null)
+        .cast<String>()
+        .toSet();
+    
+    return joinedEventIds;
+  }
+
+  static Future<List<ParseObject>> fetchJoinedEvents() async {
+    final user = await getCurrentUser();
+    if (user == null) return [];
+
+    final query = QueryBuilder<ParseObject>(ParseObject('UserEvents'))
+      ..whereEqualTo('user', user)
+      ..includeObject(['event', 'event.createdBy']);
+    
+    final response = await query.query();
+    if (!response.success || response.results == null) return [];
+
+    return response.results!
+        .map((e) => (e as ParseObject).get<ParseObject>('event'))
+        .where((event) => event != null)
+        .cast<ParseObject>()
+        .toList();
+  }
+
+  // --- FEED & POSTS ---
+  static Future<List<ParseObject>> fetchFeedPosts() async {
+    final query = QueryBuilder<ParseObject>(ParseObject('Posts'))
+      ..includeObject(['createdBy', 'event'])
+      ..orderByDescending('createdAt');
+    
+    final response = await query.query();
+    if (!response.success && response.error != null) {
+      debugPrint('ERROR: Feed Fetch Failed: ${response.error!.message}');
+    }
+    return response.success ? (response.results?.cast<ParseObject>() ?? []) : [];
+  }
+
+  static Future<bool> createPost({required String content, required ParseObject event, File? image}) async {
+    final currentUser = await getCurrentUser();
+    if (currentUser == null) return false;
+
+    final post = ParseObject('Posts')
+      ..set('content', content)
+      ..set('createdBy', currentUser)
+      ..set('event', event.toPointer());
+
+    if (image != null) {
+      post.set('image', ParseFile(image));
+    }
+
+    final response = await post.save();
+    if (response.success) {
+      // 🏆 Reward for post
+      await _rewardUser(20);
+    }
+    return response.success;
+  }
+
+  // --- PROFILE ---
+  static Future<bool> updateProfile(Map<String, dynamic> data) async {
+    final user = await getCurrentUser();
+    if (user == null) return false;
+
+    for (var entry in data.entries) {
+      if (entry.value is File) {
+        user.set(entry.key, ParseFile(entry.value));
+      } else {
+        user.set(entry.key, entry.value);
+      }
+    }
+
+    final response = await user.save();
+    if (response.success) {
+      await user.fetch();
+    }
+    return response.success;
+  }
+
+  // --- LEADERBOARD ---
+  static Future<List<ParseUser>> fetchLeaderboard() async {
+    final query = QueryBuilder<ParseUser>(ParseUser.forQuery())
+      ..orderByDescending('points')
+      ..setLimit(50);
+    
+    final response = await query.query();
+    return response.success ? (response.results?.cast<ParseUser>() ?? []) : [];
+  }
+}
