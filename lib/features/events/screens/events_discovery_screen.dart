@@ -5,6 +5,7 @@ import '../widgets/event_card.dart';
 import '../widgets/filter_chips.dart';
 import '../../../core/providers/event_provider.dart';
 import '../event_details_screen.dart';
+import '../../../l10n/app_localizations.dart';
 
 class EventsDiscoveryScreen extends StatefulWidget {
   const EventsDiscoveryScreen({super.key});
@@ -54,6 +55,7 @@ class _EventsDiscoveryScreenState extends State<EventsDiscoveryScreen> {
   @override
   Widget build(BuildContext context) {
     final eventProvider = context.watch<EventProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -78,9 +80,9 @@ class _EventsDiscoveryScreenState extends State<EventsDiscoveryScreen> {
                     Expanded(
                       child: TextField(
                         controller: _searchController,
-                        decoration: const InputDecoration(
-                          hintText: 'Search impact events...',
-                          hintStyle: TextStyle(
+                        decoration: InputDecoration(
+                          hintText: l10n.search_impact_events,
+                          hintStyle: const TextStyle(
                             color: Color(0xFF9CA3AF),
                             fontSize: 16,
                           ),
@@ -119,7 +121,7 @@ class _EventsDiscoveryScreenState extends State<EventsDiscoveryScreen> {
                   }
 
                   if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No events found'));
+                    return Center(child: Text(l10n.no_events_found));
                   }
 
                   final List<ParseObject> events = snapshot.data!;

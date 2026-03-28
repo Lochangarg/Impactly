@@ -1,6 +1,7 @@
 import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../l10n/app_localizations.dart';
 import 'widgets/auth_field.dart';
 import 'widgets/auth_button.dart';
 import '../onboarding/interests_screen.dart';
@@ -76,10 +77,9 @@ class _SignupScreenState extends State<SignupScreen> {
       user.set('phone', phone);
       user.set('location', location);
 
-      // 🛡️ SECURITY FIX: Set ACL to Public Read for Feed labels
       final acl = ParseACL()
-        ..setPublicReadAccess(allowed: true)  // ✅ Everyone can see user name
-        ..setPublicWriteAccess(allowed: false); // ❌ Only owner can edit
+        ..setPublicReadAccess(allowed: true)
+        ..setPublicWriteAccess(allowed: false);
       user.setACL(acl);
 
       final response = await user.signUp();
@@ -95,7 +95,6 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
           );
           
-          // Navigation Flow: After successful signup → navigate to InterestsScreen
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const InterestsScreen()),
@@ -116,6 +115,8 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -135,7 +136,7 @@ class _SignupScreenState extends State<SignupScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Create Account',
+                  l10n.create_account,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF111827),
@@ -143,11 +144,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text('Join our community to start making an impact', 
+                Text(l10n.join_community, 
                   style: TextStyle(color: Colors.grey[600], fontSize: 16)),
                 const SizedBox(height: 32),
                 
-                _buildLabel('Full Name'),
+                _buildLabel(l10n.full_name),
                 AuthField(
                   controller: _fullNameController,
                   hintText: 'e.g. Parikshit Kurel',
@@ -159,7 +160,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                _buildLabel('Username'),
+                _buildLabel(l10n.username),
                 AuthField(
                   controller: _usernameController,
                   hintText: 'e.g. parikshit_impact',
@@ -168,10 +169,10 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                _buildLabel('Email'),
+                _buildLabel(l10n.email),
                 AuthField(
                   controller: _emailController,
-                  hintText: 'Email address',
+                  hintText: l10n.email_address,
                   prefixIcon: Icons.mail_outline,
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Required';
@@ -189,7 +190,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildLabel('Phone'),
+                          _buildLabel(l10n.phone),
                           AuthField(
                             controller: _phoneController,
                             hintText: '9876543210',
@@ -210,7 +211,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildLabel('City'),
+                          _buildLabel(l10n.city),
                           AuthField(
                             controller: _locationController,
                             hintText: 'Location',
@@ -223,10 +224,10 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 16),
                 
-                _buildLabel('Password'),
+                _buildLabel(l10n.password),
                 AuthField(
                   controller: _passwordController,
-                  hintText: 'Password',
+                  hintText: l10n.password,
                   isPasswordField: true,
                   prefixIcon: Icons.lock_outline,
                   validator: (value) {
@@ -237,7 +238,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                _buildLabel('Confirm Password'),
+                _buildLabel(l10n.confirm_password),
                 AuthField(
                   controller: _confirmPasswordController,
                   hintText: 'Match password',
@@ -254,7 +255,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 
                 AuthButton(
                   onPressed: _onSignup,
-                  label: 'Sign up',
+                  label: l10n.sign_up,
                   isLoading: _isLoading,
                 ),
                 
@@ -264,15 +265,15 @@ class _SignupScreenState extends State<SignupScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        'Ready to login?',
-                        style: TextStyle(color: Color(0xFF6B7280)),
+                      Text(
+                        l10n.already_have_account,
+                        style: const TextStyle(color: Color(0xFF6B7280)),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text(
-                          'Log in',
-                          style: TextStyle(
+                        child: Text(
+                          l10n.login,
+                          style: const TextStyle(
                             color: Color(0xFF6366F1),
                             fontWeight: FontWeight.bold,
                           ),

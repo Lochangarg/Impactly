@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_constants.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class EventDiscoveryCard extends StatelessWidget {
   final ParseObject eventObject;
   final ParseUser? currentUser;
    final bool isJoined;
    final VoidCallback onJoin;
- 
+  
    const EventDiscoveryCard({
      super.key,
      required this.eventObject,
@@ -16,8 +17,8 @@ class EventDiscoveryCard extends StatelessWidget {
      this.isJoined = false,
    });
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'No date set';
+  String _formatDate(DateTime? date, AppLocalizations l10n) {
+    if (date == null) return l10n.no_date;
     final months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
@@ -27,8 +28,9 @@ class EventDiscoveryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = eventObject.get<String>('title') ?? 'Untitled Event';
-    final location = eventObject.get<String>('location') ?? 'No location';
+    final l10n = AppLocalizations.of(context)!;
+    final title = eventObject.get<String>('title') ?? l10n.untitled;
+    final location = eventObject.get<String>('location') ?? l10n.location;
     final points = eventObject.get<num>('points')?.toInt() ?? 0;
     final date = eventObject.get<DateTime>('date');
     final description = eventObject.get<String>('description') ?? '';
@@ -84,7 +86,7 @@ class EventDiscoveryCard extends StatelessWidget {
                           const Icon(Icons.stars, color: Color(0xFFFBBF24), size: 16),
                           const SizedBox(width: 4),
                           Text(
-                            '+$points pts',
+                            '+$points ${l10n.points_unit}',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -132,7 +134,7 @@ class EventDiscoveryCard extends StatelessWidget {
                     const Icon(Icons.calendar_today_outlined, size: 16, color: Color(0xFF6B7280)),
                     const SizedBox(width: 8),
                     Text(
-                      _formatDate(date),
+                      _formatDate(date, l10n),
                       style: const TextStyle(
                         fontSize: 13,
                         color: Color(0xFF4B5563),
@@ -163,55 +165,30 @@ class EventDiscoveryCard extends StatelessWidget {
                   final eventOwner = eventObject.get<ParseObject>('createdBy');
                   final isOwner = eventOwner?.objectId == currentUser?.objectId;
 
-                  // Debug logs
-                  debugPrint("Current User ID: ${currentUser?.objectId}");
-                  debugPrint("Event Owner ID: ${eventOwner?.objectId}");
-                  debugPrint("Is Owner: $isOwner");
-
                   return SizedBox(
                     width: double.infinity,
                     height: 48,
-                    child: isOwner
-                        ? ElevatedButton(
-                            onPressed: null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey.shade300,
-                              foregroundColor: Colors.grey.shade600,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: const Text(
-                              'Your Event',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.1,
-                              ),
-                            ),
-                          )
-                         : ElevatedButton(
-                             onPressed: (isOwner || isJoined) ? null : onJoin,
-                             style: ElevatedButton.styleFrom(
-                               backgroundColor: (isOwner || isJoined) ? Colors.grey.shade300 : const Color(0xFF6366F1),
-                               foregroundColor: (isOwner || isJoined) ? Colors.grey.shade600 : Colors.white,
-                               elevation: 0,
-                               shape: RoundedRectangleBorder(
-                                 borderRadius: BorderRadius.circular(14),
-                               ),
-                             ),
-                             child: Text(
-                               isOwner 
-                                 ? AppConstants.ownerLabel 
-                                 : (isJoined ? AppConstants.joinedLabel : AppConstants.joinEventLabel),
-                               style: const TextStyle(
-                                 fontSize: 14,
-                                 fontWeight: FontWeight.bold,
-                                 letterSpacing: 0.1,
-                               ),
-                             ),
-                           ),
+                    child: ElevatedButton(
+                      onPressed: (isOwner || isJoined) ? null : onJoin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: (isOwner || isJoined) ? Colors.grey.shade300 : const Color(0xFF6366F1),
+                        foregroundColor: (isOwner || isJoined) ? Colors.grey.shade600 : Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        isOwner 
+                          ? l10n.your_event 
+                          : (isJoined ? l10n.joined : l10n.join_event),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.1,
+                        ),
+                      ),
+                    ),
                   );
                 })(),
               ],

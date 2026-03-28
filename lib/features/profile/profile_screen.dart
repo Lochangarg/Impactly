@@ -3,6 +3,8 @@ import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/services/parse_service.dart';
 import 'edit_profile_screen.dart';
+import '../language/screens/language_selection_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -54,191 +56,78 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1), strokeWidth: 2))
-          : _currentUser == null
-              ? const Center(child: Text('User not found'))
-              : _buildBody(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      titleSpacing: 20,
-      title: Row(
-        children: [
-          const Icon(Icons.lock_outline, size: 18, color: Colors.black),
-          const SizedBox(width: 8),
-          Text(
-            _currentUser?.username ?? 'profile',
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18),
-          ),
-          const Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.black),
-        ],
-      ),
-      backgroundColor: Colors.white,
-      elevation: 0,
-      actions: [
-        IconButton(icon: const Icon(Icons.add_box_outlined, color: Colors.black), onPressed: () {}),
-        IconButton(icon: const Icon(Icons.menu, color: Colors.black), onPressed: _showSettingsSheet),
-      ],
-    );
-  }
-
-  void _showSettingsSheet() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(height: 5, width: 40, margin: const EdgeInsets.symmetric(vertical: 10), decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(5))),
-          ListTile(leading: const Icon(Icons.settings_outlined), title: const Text('Settings and privacy'), onTap: () => Navigator.pop(context)),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Log out', style: TextStyle(color: Colors.red)),
-            onTap: () async {
+      appBar: AppBar(
+        title: const Text('My Profile', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            tooltip: 'Logout',
+            onPressed: () async {
               await _currentUser?.logout();
               if (mounted) {
                 Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
               }
             },
-          ),
-          const SizedBox(height: 20),
+          )
         ],
       ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+          : _currentUser == null
+              ? const Center(child: Text('User not found'))
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Column(
+                    children: [
+                      _buildProfileHeader(_currentUser!),
+                      const SizedBox(height: 32),
+                      _buildProfileItem(Icons.email_outlined, 'Email', _currentUser!.emailAddress ?? 'No email'),
+                      _buildProfileItem(Icons.phone_outlined, 'Phone', _currentUser!.get<String>('phone') ?? 'No phone'),
+                      _buildProfileItem(Icons.location_on_outlined, 'Location', _currentUser!.get<String>('location') ?? 'No location'),
+                      const SizedBox(height: 24),
+                      const Align(alignment: Alignment.centerLeft, child: Text('Interests', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+                      const SizedBox(height: 12),
+                      _buildInterests(_currentUser!),
+                      const SizedBox(height: 32),
+                      _buildEditButton(context, _currentUser!),
+                    ],
+                  ),
+                ),
     );
   }
 
-  Widget _buildBody() {
-    return NestedScrollView(
-      headerSliverBuilder: (context, innerBoxIsScrolled) => [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeaderStats(),
-                const SizedBox(height: 12),
-                _buildProfileBio(),
-                const SizedBox(height: 16),
-                _buildActionButtons(),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-        ),
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: _SliverAppBarDelegate(
-            TabBar(
-              controller: _tabController,
-              indicatorColor: Colors.black,
-              labelColor: Colors.black,
-              unselectedLabelColor: Colors.grey,
-              indicatorWeight: 1,
-              tabs: const [
-                Tab(icon: Icon(Icons.grid_on_outlined)),
-                Tab(icon: Icon(Icons.person_pin_outlined)),
-              ],
-            ),
-          ),
-        ),
-      ],
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildPostGrid(),
-          const Center(child: Text('Mentions of you will appear here')),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderStats() {
-    final dynamic file = _currentUser!.get('profilePicture');
+  Widget _buildProfileHeader(ParseUser user) {
+    final String fullName = user.get<String>('fullName') ?? 'User';
+    final dynamic file = user.get('profilePicture');
     String? imageUrl;
-    if (file is ParseFileBase) imageUrl = file.url;
-    else if (file is String) imageUrl = file;
+    if (file is ParseFileBase) {
+      imageUrl = file.url;
+    } else if (file is String) {
+      imageUrl = file;
+    }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
       children: [
         CircleAvatar(
-          radius: 42,
-          backgroundColor: Colors.grey[200],
-          backgroundImage: imageUrl != null && imageUrl.isNotEmpty ? CachedNetworkImageProvider(imageUrl) : null,
-          child: imageUrl == null || imageUrl.isEmpty ? const Icon(Icons.person, size: 40, color: Colors.grey) : null,
+          radius: 50,
+          backgroundColor: const Color(0xFF6366F1),
+          backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+              ? NetworkImage("$imageUrl?t=${DateTime.now().millisecondsSinceEpoch}")
+              : null,
+          child: imageUrl == null || imageUrl.isEmpty
+              ? const Icon(Icons.person, size: 50, color: Colors.white)
+              : null,
         ),
-        _buildStatItem(_userPosts.length.toString(), 'Posts'),
-        _buildStatItem((_currentUser!.get<int>('points') ?? 0).toString(), 'Impact'),
-        _buildStatItem((_currentUser!.get<int>('level') ?? 1).toString(), 'Level'),
-      ],
-    );
-  }
-
-  Widget _buildStatItem(String count, String label) {
-    return Column(
-      children: [
-        Text(count, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        Text(label, style: const TextStyle(fontSize: 13, color: Colors.black87)),
-      ],
-    );
-  }
-
-  Widget _buildProfileBio() {
-    final String fullName = _currentUser!.get<String>('fullName') ?? 'User';
-    final String location = _currentUser!.get<String>('location') ?? 'Earth';
-    final List<dynamic> interests = _currentUser!.get<List<dynamic>>('interests') ?? [];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        const Text('Community Leader', style: TextStyle(color: Colors.grey, fontSize: 13)), // Placeholder category
-        Text('📍 Traveling from $location', style: const TextStyle(fontSize: 13)),
-        const SizedBox(height: 4),
-        Wrap(
-          spacing: 4,
-          children: interests.map((i) => Text('#$i', style: const TextStyle(color: Color(0xFF00376B), fontSize: 13))).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: _navigateToEdit,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
-              alignment: Alignment.center,
-              child: const Text('Edit Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-            ),
-          ),
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
-            alignment: Alignment.center,
-            child: const Text('Share Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-          ),
-        ),
-        const SizedBox(width: 6),
-        Container(
-          padding: const EdgeInsets.all(7),
-          decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
-          child: const Icon(Icons.person_add_outlined, size: 18),
-        ),
+        const SizedBox(height: 16),
+        Text(fullName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        Text('${user.get<int>('points') ?? 0} Points • Level ${user.get<int>('level') ?? 1}', style: const TextStyle(color: Color(0xFF6366F1))),
       ],
     );
   }

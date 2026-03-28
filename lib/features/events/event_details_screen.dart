@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/event_provider.dart';
 import '../../core/constants/app_constants.dart';
+import '../../l10n/app_localizations.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final String eventId;
@@ -30,7 +31,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     try {
       _currentUser = await ParseUser.currentUser() as ParseUser?;
       
-      // 6. Fix Navigation Issue: FETCH event again
       final query = QueryBuilder<ParseObject>(ParseObject('Events'))
         ..whereEqualTo('objectId', widget.eventId)
         ..includeObject(['createdBy']);
@@ -46,48 +46,45 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
-  void _onJoinEvent() async {
+  void _onJoinEvent(AppLocalizations l10n) async {
     if (_event == null) return;
     setState(() => _isActionLoading = true);
     
-    // 3. Update state immediately via Provider
     await context.read<EventProvider>().joinEvent(_event!);
     
     if (mounted) {
       setState(() => _isActionLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Joined successfully! 🚀"), backgroundColor: Colors.green),
+        SnackBar(content: Text(l10n.joined_successfully), backgroundColor: Colors.green),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_event == null) {
-      return const Scaffold(body: Center(child: Text("Event not found")));
+      return Scaffold(body: Center(child: Text(l10n.event_not_found)));
     }
 
     final eventProvider = context.watch<EventProvider>();
-    final title = _event!.get<String>('title') ?? 'Untitled';
-    final description = _event!.get<String>('description') ?? 'No description provided.';
-    final location = _event!.get<String>('location') ?? 'Virtual';
+    final title = _event!.get<String>('title') ?? l10n.untitled;
+    final description = _event!.get<String>('description') ?? '';
+    final location = _event!.get<String>('location') ?? l10n.location;
     final points = _event!.get<int>('points') ?? 0;
     final category = _event!.get<String>('category') ?? 'General';
     final dateObj = _event!.get<DateTime>('date');
-    final dateStr = dateObj != null ? DateFormat('EEEE, MMM d, yyyy • hh:mm a').format(dateObj) : 'No date';
+    final dateStr = dateObj != null ? DateFormat('EEEE, MMM d, yyyy • hh:mm a').format(dateObj) : l10n.no_date;
     final creator = _event!.get<ParseObject>('createdBy');
     final creatorName = creator?.get<String>('fullName') ?? 'Organizer';
     
-    // 5. Fix Button Logic
     final isOwner = creator?.objectId == _currentUser?.objectId;
     final isJoined = eventProvider.isUserJoined(_event!.objectId);
-
-    print("DEBUG: Joined IDs: ${eventProvider.joinedEventIds}");
-    print("DEBUG: Current Event: ${_event!.objectId}");
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -125,13 +122,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   const SizedBox(height: 16),
                   Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
                   const SizedBox(height: 24),
-                  _buildInfoRow(Icons.calendar_month_outlined, 'When', dateStr),
+                  _buildInfoRow(Icons.calendar_month_outlined, l10n.when, dateStr),
                   const SizedBox(height: 16),
-                  _buildInfoRow(Icons.location_on_outlined, 'Location', location),
+                  _buildInfoRow(Icons.location_on_outlined, l10n.location, location),
                   const SizedBox(height: 16),
-                  _buildInfoRow(Icons.stars_outlined, 'Reward', '+$points Points'),
+                  _buildInfoRow(Icons.stars_outlined, l10n.reward, '+$points ${l10n.points_unit}'),
                   const Divider(height: 48, color: Color(0xFFF3F4F6), thickness: 1.5),
-                  const Text('About this Event', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(l10n.about_event, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   Text(description, style: const TextStyle(color: Color(0xFF4B5563), height: 1.6, fontSize: 15)),
                   const SizedBox(height: 32),
@@ -142,7 +139,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Organized by', style: TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
+                          Text(l10n.organized_by, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
                           Text(creatorName, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
                         ],
                       ),
@@ -165,7 +162,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: (isOwner || isJoined || _isActionLoading) ? null : _onJoinEvent,
+            onPressed: (isOwner || isJoined || _isActionLoading) ? null : () => _onJoinEvent(l10n),
             style: ElevatedButton.styleFrom(
               backgroundColor: (isOwner || isJoined) ? Colors.grey.shade300 : const Color(0xFF6366F1),
               foregroundColor: (isOwner || isJoined) ? Colors.grey.shade600 : Colors.white,
@@ -175,7 +172,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             child: _isActionLoading 
               ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
               : Text(
-                  isOwner ? AppConstants.ownerLabel : (isJoined ? AppConstants.joinedLabel : AppConstants.joinEventLabel),
+                  isOwner ? l10n.your_event : (isJoined ? l10n.joined : l10n.join_event),
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
                 ),
           ),

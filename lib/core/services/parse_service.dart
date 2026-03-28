@@ -152,6 +152,16 @@ class ParseService {
     return response.success ? (response.results?.cast<ParseObject>() ?? []) : [];
   }
 
+  static Future<List<ParseObject>> fetchUserPosts(ParseUser user) async {
+    final query = QueryBuilder<ParseObject>(ParseObject('Posts'))
+      ..whereEqualTo('createdBy', user.toPointer())
+      ..includeObject(['createdBy', 'event'])
+      ..orderByDescending('createdAt');
+    
+    final response = await query.query();
+    return response.success ? (response.results?.cast<ParseObject>() ?? []) : [];
+  }
+
   static Future<bool> createPost({required String content, required ParseObject event, File? image}) async {
     final currentUser = await getCurrentUser();
     if (currentUser == null) return false;
@@ -170,6 +180,47 @@ class ParseService {
       // 🏆 Reward for post
       await _rewardUser(20);
     }
+    return response.success;
+  }
+
+  static Future<bool> toggleLike(ParseObject post) async {
+    final user = await getCurrentUser();
+    if (user == null) return false;
+
+    final List<dynamic> likes = post.get<List<dynamic>>('likes') ?? [];
+    final String userId = user.objectId!;
+
+    if (likes.contains(userId)) {
+      likes.remove(userId);
+    } else {
+      likes.add(userId);
+    }
+
+    post.set('likes', likes);
+    final response = await post.save();
+    return response.success;
+  }
+
+  static Future<List<ParseObject>> fetchComments(String postId) async {
+    final query = QueryBuilder<ParseObject>(ParseObject('Comments'))
+      ..whereEqualTo('post', (ParseObject('Posts')..objectId = postId).toPointer())
+      ..includeObject(['user'])
+      ..orderByAscending('createdAt');
+    
+    final response = await query.query();
+    return response.success ? (response.results?.cast<ParseObject>() ?? []) : [];
+  }
+
+  static Future<bool> addComment(String postId, String text) async {
+    final user = await getCurrentUser();
+    if (user == null) return false;
+
+    final comment = ParseObject('Comments')
+      ..set('text', text)
+      ..set('user', user)
+      ..set('post', (ParseObject('Posts')..objectId = postId).toPointer());
+    
+    final response = await comment.save();
     return response.success;
   }
 

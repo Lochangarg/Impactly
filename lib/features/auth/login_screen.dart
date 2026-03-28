@@ -1,5 +1,6 @@
 import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import 'widgets/auth_field.dart';
 import 'widgets/auth_button.dart';
 import 'signup_screen.dart';
@@ -38,23 +39,29 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (response.success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login Successful 🚀")),
-      );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MainScreen()),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login Successful 🚀")),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response.error!.message)),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response.error!.message)),
+        );
+      }
     }
   }
 }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -67,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const SizedBox(height: 20),
                 Text(
-                  'Welcome Back',
+                  l10n.welcome_back,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF111827),
@@ -76,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sign in to your account',
+                  l10n.sign_in_to_account,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: const Color(0xFF6B7280),
                   ),
@@ -86,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Email field
                 AuthField(
                   controller: _emailController,
-                  hintText: 'Email address',
+                  hintText: l10n.email_address,
                   prefixIcon: Icons.mail_outline,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -103,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Password field
                 AuthField(
                   controller: _passwordController,
-                  hintText: 'Password',
+                  hintText: l10n.password,
                   isPasswordField: true,
                   prefixIcon: Icons.lock_outline,
                   validator: (value) {
@@ -122,9 +129,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {},
-                    child: const Text(
-                      'Forgot password?',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.forgot_password,
+                      style: const TextStyle(
                         color: Color(0xFF6366F1),
                         fontWeight: FontWeight.w600,
                       ),
@@ -137,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Login action
                 AuthButton(
                   onPressed: _onLogin,
-                  label: 'Login',
+                  label: l10n.login,
                   isLoading: _isLoading,
                 ),
                 
@@ -147,9 +154,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      "Don't have an account?",
-                      style: TextStyle(
+                    Text(
+                      l10n.dont_have_account,
+                      style: const TextStyle(
                         color: Color(0xFF6B7280),
                       ),
                     ),
@@ -162,9 +169,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         );
                       },
-                      child: const Text(
-                        'Sign up',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.sign_up,
+                        style: const TextStyle(
                           color: Color(0xFF6366F1),
                           fontWeight: FontWeight.w700,
                         ),

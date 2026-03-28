@@ -9,6 +9,7 @@ import '../../../core/services/parse_service.dart';
 import '../../events/event_details_screen.dart';
 import '../../../core/providers/event_provider.dart';
 import '../../leaderboard/leaderboard_screen.dart';
+import '../../../l10n/app_localizations.dart';
 
 class HomeContent extends StatefulWidget {
   final Function(int, {String? category})? onNavigate;
@@ -29,7 +30,6 @@ class _HomeContentState extends State<HomeContent> {
 
    Future<Map<String, dynamic>> _fetchHomeData() async {
     final user = await ParseService.getCurrentUser();
-    // Fetch all events (sorted by createdAt by default in fetchEvents)
     final events = await ParseService.fetchEvents();
     return {'user': user, 'events': events};
   }
@@ -37,6 +37,7 @@ class _HomeContentState extends State<HomeContent> {
   @override
   Widget build(BuildContext context) {
     final eventProvider = context.watch<EventProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     return FutureBuilder<Map<String, dynamic>>(
       future: _homeData,
@@ -57,7 +58,7 @@ class _HomeContentState extends State<HomeContent> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Welcome Banner
-                  _buildBanner(user?.get<String>('fullName') ?? 'User'),
+                  _buildBanner(user?.get<String>('fullName') ?? 'User', l10n),
                   const SizedBox(height: 32),
 
                   // Points Card
@@ -68,18 +69,18 @@ class _HomeContentState extends State<HomeContent> {
                   const SizedBox(height: 40),
 
                   // Categories
-                  const Text('Explore Categories', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(l10n.explore_categories, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      CategoryIcon(label: 'Cleaning', icon: Icons.cleaning_services, color: const Color(0xFF10B981), 
+                      CategoryIcon(label: l10n.cleaning, icon: Icons.cleaning_services, color: const Color(0xFF10B981), 
                           onTap: () => widget.onNavigate?.call(1, category: 'Cleaning')),
-                      CategoryIcon(label: 'Workshops', icon: Icons.school, color: const Color(0xFF3B82F6),
+                      CategoryIcon(label: l10n.workshops, icon: Icons.school, color: const Color(0xFF3B82F6),
                           onTap: () => widget.onNavigate?.call(1, category: 'Workshops')),
-                      CategoryIcon(label: 'Social', icon: Icons.volunteer_activism, color: const Color(0xFFF59E0B),
+                      CategoryIcon(label: l10n.social, icon: Icons.volunteer_activism, color: const Color(0xFFF59E0B),
                           onTap: () => widget.onNavigate?.call(1, category: 'Social')),
-                      CategoryIcon(label: 'Music', icon: Icons.music_note, color: const Color(0xFFEC4899),
+                      CategoryIcon(label: l10n.music, icon: Icons.music_note, color: const Color(0xFFEC4899),
                           onTap: () => widget.onNavigate?.call(1, category: 'Music')),
                     ],
                   ),
@@ -89,14 +90,14 @@ class _HomeContentState extends State<HomeContent> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Recently Added Events', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      TextButton(onPressed: () => widget.onNavigate?.call(1), child: const Text('See All')),
+                      Text(l10n.recently_added_events, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      TextButton(onPressed: () => widget.onNavigate?.call(1), child: Text(l10n.see_all)),
                     ],
                   ),
                   const SizedBox(height: 16),
                   
                   if (events.isEmpty) 
-                    const Text('No events added yet', style: TextStyle(color: Colors.grey))
+                    Text(l10n.no_events_added, style: const TextStyle(color: Colors.grey))
                   else
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -128,13 +129,13 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
-  Widget _buildBanner(String name) {
+  Widget _buildBanner(String name, AppLocalizations l10n) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Hi, ${name.split(' ')[0]}! 👋', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const Text('Ready to make an impact?', style: TextStyle(color: Colors.grey)),
+          Text(l10n.hi_user(name.split(' ')[0]), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          Text(l10n.ready_to_impact, style: const TextStyle(color: Colors.grey)),
         ]),
         const Icon(Icons.notifications_outlined),
       ],
