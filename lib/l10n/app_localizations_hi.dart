@@ -105,7 +105,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get ready_to_impact => 'प्रभाव डालने के लिए तैयार हैं?';
 
   @override
-  String get no_events_added => 'अभी तक कोई इवेंट नहीं जोड़ा गया है';
+  String get no_events_added => 'अभी तक कोई इवेंट नहीं जोड़ा गया';
 
   @override
   String get cleaning => 'सफाई';
@@ -147,7 +147,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get join_event => 'इवेंट में शामिल हों';
 
   @override
-  String get joined => 'शामिल हो गए';
+  String get joined => 'शामिल';
 
   @override
   String get created_by_you => 'आपके द्वारा बनाया गया';
@@ -220,4 +220,177 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get post_comment => 'पोस्ट करें';
+
+  @override
+  String get interests => 'रुचियां';
+
+  @override
+  String get info => 'जानकारी';
+
+  @override
+  String get logout_tooltip => 'लॉग आउट';
+
+  @override
+  String get user_not_found => 'उपयोगकर्ता नहीं मिला';
+
+  @override
+  String get discover_events => 'इवेंट्स खोजें';
+
+  @override
+  String get search_events => 'इवेंट्स खोजें...';
+
+  @override
+  String get all => 'सभी';
+
+  @override
+  String get volunteering => 'स्वंयसेवा';
+
+  @override
+  String get create_event => 'इवेंट बनाएं';
+
+  @override
+  String get create_new_event => 'नया इवेंट बनाएं';
+
+  @override
+  String get event_title => 'इवेंट का शीर्षक';
+
+  @override
+  String get event_title_hint => 'जैसे: बीच सफाई अभियान';
+
+  @override
+  String get description_label => 'विवरण';
+
+  @override
+  String get description_hint => 'उपयोगकर्ताओं को इवेंट के बारे में बताएं...';
+
+  @override
+  String get location_label => 'स्थान';
+
+  @override
+  String get location_hint => 'जैसे: मरीन ड्राइव, मुंबई';
+
+  @override
+  String get category => 'श्रेणी';
+
+  @override
+  String get points_reward => 'अंक पुरस्कार';
+
+  @override
+  String get points_hint => 'जैसे: 100';
+
+  @override
+  String get event_date => 'इवेंट की तारीख';
+
+  @override
+  String get select_date => 'तारीख चुनें';
+
+  @override
+  String get event_created => 'इवेंट बनाया गया 🎉';
+
+  @override
+  String get please_select_date => 'कृपया एक तारीख चुनें';
+
+  @override
+  String get field_required => 'यह फ़ील्ड आवश्यक है';
+
+  @override
+  String get valid_number => 'एक वैध संख्या दर्ज करें';
+
+  @override
+  String get impact_points => 'इम्पैक्ट पॉइंट्स';
+
+  @override
+  String level_text(int level) {
+    return 'स्तर $level';
+  }
+
+  @override
+  String get view_ranking => 'रैंकिंग देखें';
+
+  @override
+  String get join => 'शामिल हों';
+
+  @override
+  String get community_feed => 'कम्युनिटी फीड';
+
+  @override
+  String get no_posts_yet => 'अभी तक कोई पोस्ट नहीं';
+
+  @override
+  String get be_the_first_to_share => 'अपडेट शेयर करने वाले पहले व्यक्ति बनें!';
+
+  @override
+  String get new_post => 'नई पोस्ट';
+
+  @override
+  String get post => 'पोस्ट';
+
+  @override
+  String get event_update => 'इवेंट अपडेट';
+
+  @override
+  String get select_joined_event => 'शामिल इवेंट चुनें';
+
+  @override
+  String get join_event_to_post =>
+      'अपडेट पोस्ट करने के लिए किसी इवेंट में शामिल हों!';
+
+  @override
+  String get whats_the_update => 'इस इवेंट का क्या अपडेट है?';
+
+  @override
+  String get add_photo => 'फोटो जोड़ें';
+
+  @override
+  String get post_published => 'पोस्ट प्रकाशित! ✨';
+
+  @override
+  String get write_something_error => 'कृपया कुछ लिखें और एक इवेंट चुनें';
+
+  @override
+  String get recently => 'अभी-अभी';
+
+  @override
+  String joined_at(String eventTitle) {
+    return 'शामिल हुए: $eventTitle';
+  }
+
+  @override
+  String get post_update => 'अपडेट पोस्ट करें';
+
+  @override
+  String points_count(int count) {
+    return '+$count अंक';
+  }
+
+  @override
+  String get environment => 'पर्यावरण';
+
+  @override
+  String get art => 'कला';
+
+  @override
+  String get education => 'शिक्षा';
+
+  @override
+  String get community => 'समुदाय';
+
+  @override
+  String get animal_care => 'पशु देखभाल';
+
+  @override
+  String get no_interests_specified => 'कोई रुचि निर्दिष्ट नहीं है।';
+
+  @override
+  String get profile_caption =>
+      'अपने प्रभाव को चित्रित करें और इसे समुदाय के साथ साझा करें।';
+
+  @override
+  String points_and_level(int points, int level) {
+    return '$points पॉइंट्स • स्तर $level';
+  }
+
+  @override
+  String get experience_impactly =>
+      'अपनी पसंदीदा भाषा में Impactly का अनुभव करें';
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 class PointsCard extends StatelessWidget {
   final int points;
@@ -12,6 +13,8 @@ class PointsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -35,9 +38,9 @@ class PointsCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Impact Points',
-                  style: TextStyle(
+                Text(
+                  l10n.impact_points,
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -62,7 +65,7 @@ class PointsCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          'Level $level',
+                          l10n.level_text(level),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -72,7 +75,7 @@ class PointsCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '• View Ranking',
+                        '• ${l10n.view_ranking}',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.8),
                           fontSize: 12,

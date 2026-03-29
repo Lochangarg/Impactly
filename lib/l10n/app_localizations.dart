@@ -511,6 +511,330 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Post'**
   String get post_comment;
+
+  /// No description provided for @interests.
+  ///
+  /// In en, this message translates to:
+  /// **'Interests'**
+  String get interests;
+
+  /// No description provided for @info.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get info;
+
+  /// No description provided for @logout_tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get logout_tooltip;
+
+  /// No description provided for @user_not_found.
+  ///
+  /// In en, this message translates to:
+  /// **'User not found'**
+  String get user_not_found;
+
+  /// No description provided for @discover_events.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover Events'**
+  String get discover_events;
+
+  /// No description provided for @search_events.
+  ///
+  /// In en, this message translates to:
+  /// **'Search events...'**
+  String get search_events;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @volunteering.
+  ///
+  /// In en, this message translates to:
+  /// **'Volunteering'**
+  String get volunteering;
+
+  /// No description provided for @create_event.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Event'**
+  String get create_event;
+
+  /// No description provided for @create_new_event.
+  ///
+  /// In en, this message translates to:
+  /// **'Create New Event'**
+  String get create_new_event;
+
+  /// No description provided for @event_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Event Title'**
+  String get event_title;
+
+  /// No description provided for @event_title_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Beach Cleanup Drive'**
+  String get event_title_hint;
+
+  /// No description provided for @description_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get description_label;
+
+  /// No description provided for @description_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell users about the event...'**
+  String get description_hint;
+
+  /// No description provided for @location_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get location_label;
+
+  /// No description provided for @location_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Marine Drive, Mumbai'**
+  String get location_hint;
+
+  /// No description provided for @category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get category;
+
+  /// No description provided for @points_reward.
+  ///
+  /// In en, this message translates to:
+  /// **'Points Reward'**
+  String get points_reward;
+
+  /// No description provided for @points_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 100'**
+  String get points_hint;
+
+  /// No description provided for @event_date.
+  ///
+  /// In en, this message translates to:
+  /// **'Event Date'**
+  String get event_date;
+
+  /// No description provided for @select_date.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Date'**
+  String get select_date;
+
+  /// No description provided for @event_created.
+  ///
+  /// In en, this message translates to:
+  /// **'Event Created 🎉'**
+  String get event_created;
+
+  /// No description provided for @please_select_date.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a date'**
+  String get please_select_date;
+
+  /// No description provided for @field_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Field is required'**
+  String get field_required;
+
+  /// No description provided for @valid_number.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get valid_number;
+
+  /// No description provided for @impact_points.
+  ///
+  /// In en, this message translates to:
+  /// **'Impact Points'**
+  String get impact_points;
+
+  /// No description provided for @level_text.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String level_text(int level);
+
+  /// No description provided for @view_ranking.
+  ///
+  /// In en, this message translates to:
+  /// **'View Ranking'**
+  String get view_ranking;
+
+  /// No description provided for @join.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get join;
+
+  /// No description provided for @community_feed.
+  ///
+  /// In en, this message translates to:
+  /// **'Community Feed'**
+  String get community_feed;
+
+  /// No description provided for @no_posts_yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts yet'**
+  String get no_posts_yet;
+
+  /// No description provided for @be_the_first_to_share.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to share an update!'**
+  String get be_the_first_to_share;
+
+  /// No description provided for @new_post.
+  ///
+  /// In en, this message translates to:
+  /// **'New Post'**
+  String get new_post;
+
+  /// No description provided for @post.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get post;
+
+  /// No description provided for @event_update.
+  ///
+  /// In en, this message translates to:
+  /// **'Event Update'**
+  String get event_update;
+
+  /// No description provided for @select_joined_event.
+  ///
+  /// In en, this message translates to:
+  /// **'Select joined event'**
+  String get select_joined_event;
+
+  /// No description provided for @join_event_to_post.
+  ///
+  /// In en, this message translates to:
+  /// **'Join an event to post updates!'**
+  String get join_event_to_post;
+
+  /// No description provided for @whats_the_update.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s the update from this event?'**
+  String get whats_the_update;
+
+  /// No description provided for @add_photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Photo'**
+  String get add_photo;
+
+  /// No description provided for @post_published.
+  ///
+  /// In en, this message translates to:
+  /// **'Post published! ✨'**
+  String get post_published;
+
+  /// No description provided for @write_something_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Please write something and select an event'**
+  String get write_something_error;
+
+  /// No description provided for @recently.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently'**
+  String get recently;
+
+  /// No description provided for @joined_at.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined: {eventTitle}'**
+  String joined_at(String eventTitle);
+
+  /// No description provided for @post_update.
+  ///
+  /// In en, this message translates to:
+  /// **'Post Update'**
+  String get post_update;
+
+  /// No description provided for @points_count.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} pts'**
+  String points_count(int count);
+
+  /// No description provided for @environment.
+  ///
+  /// In en, this message translates to:
+  /// **'Environment'**
+  String get environment;
+
+  /// No description provided for @art.
+  ///
+  /// In en, this message translates to:
+  /// **'Art'**
+  String get art;
+
+  /// No description provided for @education.
+  ///
+  /// In en, this message translates to:
+  /// **'Education'**
+  String get education;
+
+  /// No description provided for @community.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get community;
+
+  /// No description provided for @animal_care.
+  ///
+  /// In en, this message translates to:
+  /// **'Animal Care'**
+  String get animal_care;
+
+  /// No description provided for @no_interests_specified.
+  ///
+  /// In en, this message translates to:
+  /// **'No interests specified.'**
+  String get no_interests_specified;
+
+  /// No description provided for @profile_caption.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture your impact and share it with the community.'**
+  String get profile_caption;
+
+  /// No description provided for @points_and_level.
+  ///
+  /// In en, this message translates to:
+  /// **'{points} Points • Level {level}'**
+  String points_and_level(int points, int level);
+
+  /// No description provided for @experience_impactly.
+  ///
+  /// In en, this message translates to:
+  /// **'Experience Impactly in your preferred language'**
+  String get experience_impactly;
 }
 
 class _AppLocalizationsDelegate

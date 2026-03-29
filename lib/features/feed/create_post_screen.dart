@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/services/parse_service.dart';
+import '../../l10n/app_localizations.dart';
+import '../../core/services/translation_service.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -17,6 +19,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   File? _imageFile;
   final _picker = ImagePicker();
   bool _isLoading = false;
+  bool _autoTranslate = true;
   Future<List<ParseObject>>? _joinedEvents;
 
   @override
@@ -32,10 +35,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     }
   }
 
-  void _onCreatePost() async {
+  void _onCreatePost(AppLocalizations l10n) async {
     if (_contentController.text.trim().isEmpty || _selectedEvent == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please write something and select an event')),
+        SnackBar(content: Text(l10n.write_something_error)),
       );
       return;
     }
@@ -43,14 +46,20 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     setState(() => _isLoading = true);
     
     try {
+      String content = _contentController.text.trim();
+      
+      if (_autoTranslate) {
+        content = await TranslationService.translate(content, 'hi');
+      }
+
       final success = await ParseService.createPost(
-        content: _contentController.text.trim(),
+        content: content,
         event: _selectedEvent!,
         image: _imageFile,
       );
 
       if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Post published! ✨'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.post_published), backgroundColor: Colors.green));
         Navigator.pop(context, true);
       }
     } catch (e) {
@@ -64,18 +73,31 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('New Post', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(l10n.new_post, style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: const Color(0xFF111827),
         actions: [
+          Row(
+            children: [
+              const Text('Auto-Translate', style: TextStyle(fontSize: 10, color: Colors.grey)),
+              Switch(
+                value: _autoTranslate,
+                onChanged: (val) => setState(() => _autoTranslate = val),
+                activeColor: const Color(0xFF6366F1),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ],
+          ),
           TextButton(
-            onPressed: _isLoading ? null : _onCreatePost,
+            onPressed: _isLoading ? null : () => _onCreatePost(l10n),
             child: Text(
-              'Post',
+              l10n.post,
               style: TextStyle(
                 color: _isLoading ? Colors.grey : const Color(0xFF6366F1),
                 fontWeight: FontWeight.bold,
@@ -92,13 +114,15 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Event Picker
-            const Text('Event Update', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF6B7280))),
+            Text(l10n.event_update, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF6B7280))),
             const SizedBox(height: 12),
             FutureBuilder<List<ParseObject>>(
               future: _joinedEvents,
               builder: (context, snapshot) {
                 final events = snapshot.data ?? [];
-                if (events.isEmpty) return const Text('Join an event to post updates!');
+                if (events.isEmpty && snapshot.connectionState == ConnectionState.done) {
+                  return Text(l10n.join_event_to_post);
+                }
                 
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -106,7 +130,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<ParseObject>(
                       value: _selectedEvent,
-                      hint: const Text('Select joined event'),
+                      hint: Text(l10n.select_joined_event),
                       isExpanded: true,
                       items: events.map((e) {
                         return DropdownMenuItem(value: e, child: Text(e.get<String>('title') ?? 'Untitled'));
@@ -123,9 +147,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             TextField(
               controller: _contentController,
               maxLines: null,
-              decoration: const InputDecoration(
-                hintText: "What's the update from this event?",
-                hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+              decoration: InputDecoration(
+                hintText: l10n.whats_the_update,
+                hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
                 border: InputBorder.none,
               ),
               style: const TextStyle(fontSize: 18, color: Color(0xFF111827), height: 1.5),
@@ -158,7 +182,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             OutlinedButton.icon(
               onPressed: _pickImage,
               icon: const Icon(Icons.add_photo_alternate_outlined),
-              label: const Text('Add Photo'),
+              label: Text(l10n.add_photo),
               style: OutlinedButton.styleFrom(
                 backgroundColor: const Color(0xFFF3F4F6),
                 foregroundColor: const Color(0xFF6366F1),

@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/services/parse_service.dart';
 import 'create_post_screen.dart';
 import '../../l10n/app_localizations.dart';
+import '../../core/services/translation_service.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -33,6 +34,23 @@ class _FeedScreenState extends State<FeedScreen> {
     if (mounted) setState(() => _isLoading = true);
     try {
       final fetchedPosts = await ParseService.fetchFeedPosts();
+      
+      final locale = Localizations.maybeLocaleOf(context)?.toString() ?? 'en';
+      if (locale == 'hi') {
+        for (var post in fetchedPosts) {
+          final content = post.get<String>('content') ?? '';
+          final translatedContent = await TranslationService.translate(content, 'hi');
+          post.set('content', translatedContent);
+
+          final event = post.get<ParseObject>('event');
+          if (event != null) {
+            final title = event.get<String>('title') ?? '';
+            final translatedTitle = await TranslationService.translate(title, 'hi');
+            event.set('title', translatedTitle);
+          }
+        }
+      }
+
       if (mounted) {
         setState(() {
           _posts = fetchedPosts;
@@ -53,7 +71,7 @@ class _FeedScreenState extends State<FeedScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Community Feed', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+        title: Text(l10n.community_feed, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
@@ -68,22 +86,25 @@ class _FeedScreenState extends State<FeedScreen> {
               onRefresh: _fetchPosts,
               color: const Color(0xFF6366F1),
               child: _posts.isEmpty
-                  ? Center(
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
+                  ? SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Container(
+                        height: MediaQuery.of(context).size.height * 0.7,
+                        alignment: Alignment.center,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.dynamic_feed_outlined, size: 80, color: Colors.grey[300]),
                             const SizedBox(height: 16),
-                            const Text('No posts yet', style: TextStyle(fontSize: 18, color: Color(0xFF111827), fontWeight: FontWeight.bold)),
+                            Text(l10n.no_posts_yet, style: const TextStyle(fontSize: 18, color: Color(0xFF111827), fontWeight: FontWeight.bold)),
                             const SizedBox(height: 8),
-                            const Text('Be the first to share an update!', style: TextStyle(color: Color(0xFF6B7280))),
+                            Text(l10n.be_the_first_to_share, style: const TextStyle(color: Color(0xFF6B7280))),
                           ],
                         ),
                       ),
                     )
                   : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                       itemCount: _posts.length,
                       itemBuilder: (context, index) {
@@ -116,16 +137,16 @@ class _FeedScreenState extends State<FeedScreen> {
                                   ? profilePicRaw.url
                                   : (profilePicRaw is String ? profilePicRaw : null);
 
-                          // 📅 Date & Image
-                          final date = post.createdAt;
-                          final imageUrl = post.get<ParseFile>('image')?.url;
+                        final date = post.createdAt;
+                        final locale = Localizations.localeOf(context).toString();
+                        final imageUrl = post.get<ParseFile>('image')?.url;
 
                         return _PostCard(
                           userName: userName,
                           userProfileUrl: userProfileUrl,
-                          eventTitle: event?.get<String>('title') ?? 'Event Update',
+                          eventTitle: event?.get<String>('title') ?? l10n.event_update,
                           content: post.get<String>('content') ?? '',
-                          dateStr: date != null ? DateFormat('MMM d, hh:mm a').format(date) : 'Recently',
+                          dateStr: date != null ? DateFormat('MMM d, hh:mm a', locale).format(date) : l10n.recently,
                           postImageUrl: imageUrl,
                         );
                       },
@@ -138,7 +159,7 @@ class _FeedScreenState extends State<FeedScreen> {
         },
         backgroundColor: const Color(0xFF6366F1),
         icon: const Icon(Icons.add_comment_outlined, color: Colors.white),
-        label: const Text('Post Update', style: TextStyle(color: Colors.white)),
+        label: Text(l10n.post_update, style: const TextStyle(color: Colors.white)),
       ),
     );
   }
@@ -192,7 +213,7 @@ class _PostCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(color: const Color(0xFF6366F1).withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
             child: Text(
-              'Joined: $eventTitle',
+              AppLocalizations.of(context)!.joined_at(eventTitle),
               style: const TextStyle(color: Color(0xFF6366F1), fontSize: 11, fontWeight: FontWeight.bold),
             ),
           ),

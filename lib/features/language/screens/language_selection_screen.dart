@@ -18,9 +18,11 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        _selectedLocale = context.read<LocaleProvider>().locale ?? const Locale('en');
-      });
+      if (mounted) {
+        setState(() {
+          _selectedLocale = context.read<LocaleProvider>().locale ?? const Locale('en');
+        });
+      }
     });
   }
 
@@ -54,7 +56,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                "Experience Impactly in your preferred language",
+                l10n.experience_impactly,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: const Color(0xFF6B7280),
                 ),

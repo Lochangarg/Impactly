@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../../l10n/app_localizations.dart';
 
 class EventListItem extends StatelessWidget {
   final String title;
@@ -27,6 +27,8 @@ class EventListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -55,7 +57,17 @@ class EventListItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  category,
+                  () {
+                    switch (category) {
+                      case 'Cleaning': return l10n.cleaning;
+                      case 'Workshops': return l10n.workshops;
+                      case 'Volunteering': return l10n.volunteering;
+                      case 'Music': return l10n.music;
+                      case 'Social': return l10n.social;
+                      case 'All': return l10n.all;
+                      default: return category;
+                    }
+                  }(),
                   style: const TextStyle(
                     color: Color(0xFF6366F1),
                     fontSize: 12,
@@ -68,7 +80,7 @@ class EventListItem extends StatelessWidget {
                   const Icon(Icons.stars, color: Color(0xFFF59E0B), size: 16),
                   const SizedBox(width: 4),
                   Text(
-                    '+$points pts',
+                    l10n.points_count(points),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Color(0xFFF59E0B),
@@ -127,8 +139,8 @@ class EventListItem extends StatelessWidget {
                 ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                 : Text(
                     isOwner 
-                      ? AppConstants.ownerLabel 
-                      : (isJoined ? AppConstants.joinedLabel : AppConstants.joinEventLabel), 
+                      ? l10n.created_by_you 
+                      : (isJoined ? l10n.joined : l10n.join_event), 
                     style: const TextStyle(fontWeight: FontWeight.bold)
                   ),
             ),

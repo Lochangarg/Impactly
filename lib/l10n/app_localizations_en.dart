@@ -218,4 +218,177 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get post_comment => 'Post';
+
+  @override
+  String get interests => 'Interests';
+
+  @override
+  String get info => 'Info';
+
+  @override
+  String get logout_tooltip => 'Logout';
+
+  @override
+  String get user_not_found => 'User not found';
+
+  @override
+  String get discover_events => 'Discover Events';
+
+  @override
+  String get search_events => 'Search events...';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get volunteering => 'Volunteering';
+
+  @override
+  String get create_event => 'Create Event';
+
+  @override
+  String get create_new_event => 'Create New Event';
+
+  @override
+  String get event_title => 'Event Title';
+
+  @override
+  String get event_title_hint => 'e.g. Beach Cleanup Drive';
+
+  @override
+  String get description_label => 'Description';
+
+  @override
+  String get description_hint => 'Tell users about the event...';
+
+  @override
+  String get location_label => 'Location';
+
+  @override
+  String get location_hint => 'e.g. Marine Drive, Mumbai';
+
+  @override
+  String get category => 'Category';
+
+  @override
+  String get points_reward => 'Points Reward';
+
+  @override
+  String get points_hint => 'e.g. 100';
+
+  @override
+  String get event_date => 'Event Date';
+
+  @override
+  String get select_date => 'Select Date';
+
+  @override
+  String get event_created => 'Event Created 🎉';
+
+  @override
+  String get please_select_date => 'Please select a date';
+
+  @override
+  String get field_required => 'Field is required';
+
+  @override
+  String get valid_number => 'Enter a valid number';
+
+  @override
+  String get impact_points => 'Impact Points';
+
+  @override
+  String level_text(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String get view_ranking => 'View Ranking';
+
+  @override
+  String get join => 'Join';
+
+  @override
+  String get community_feed => 'Community Feed';
+
+  @override
+  String get no_posts_yet => 'No posts yet';
+
+  @override
+  String get be_the_first_to_share => 'Be the first to share an update!';
+
+  @override
+  String get new_post => 'New Post';
+
+  @override
+  String get post => 'Post';
+
+  @override
+  String get event_update => 'Event Update';
+
+  @override
+  String get select_joined_event => 'Select joined event';
+
+  @override
+  String get join_event_to_post => 'Join an event to post updates!';
+
+  @override
+  String get whats_the_update => 'What\'s the update from this event?';
+
+  @override
+  String get add_photo => 'Add Photo';
+
+  @override
+  String get post_published => 'Post published! ✨';
+
+  @override
+  String get write_something_error =>
+      'Please write something and select an event';
+
+  @override
+  String get recently => 'Recently';
+
+  @override
+  String joined_at(String eventTitle) {
+    return 'Joined: $eventTitle';
+  }
+
+  @override
+  String get post_update => 'Post Update';
+
+  @override
+  String points_count(int count) {
+    return '+$count pts';
+  }
+
+  @override
+  String get environment => 'Environment';
+
+  @override
+  String get art => 'Art';
+
+  @override
+  String get education => 'Education';
+
+  @override
+  String get community => 'Community';
+
+  @override
+  String get animal_care => 'Animal Care';
+
+  @override
+  String get no_interests_specified => 'No interests specified.';
+
+  @override
+  String get profile_caption =>
+      'Capture your impact and share it with the community.';
+
+  @override
+  String points_and_level(int points, int level) {
+    return '$points Points • Level $level';
+  }
+
+  @override
+  String get experience_impactly =>
+      'Experience Impactly in your preferred language';
 }

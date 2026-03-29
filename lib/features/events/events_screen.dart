@@ -7,6 +7,8 @@ import 'create_event_screen.dart';
 import 'event_details_screen.dart';
 import '../../core/services/parse_service.dart';
 import '../../core/providers/event_provider.dart';
+import '../../core/services/translation_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class EventsScreen extends StatefulWidget {
   final String? initialCategory;
@@ -24,6 +26,7 @@ class _EventsScreenState extends State<EventsScreen> {
    bool _isActionLoading = false;
    String? _loadingEventId;
    ParseUser? _currentUser;
+   bool _autoTranslate = true;
 
   @override
   void initState() {
@@ -58,13 +61,25 @@ class _EventsScreenState extends State<EventsScreen> {
   Widget build(BuildContext context) {
     final eventProvider = context.watch<EventProvider>();
 
+    final l10n = AppLocalizations.of(context)!;
+    final isHindi = Localizations.localeOf(context).languageCode == 'hi';
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Discover Events', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+        title: Text(l10n.discover_events, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: Icon(_autoTranslate ? Icons.translate : Icons.g_translate_outlined, 
+              color: const Color(0xFF6366F1),
+            ),
+            tooltip: 'Toggle Translation',
+            onPressed: () => setState(() => _autoTranslate = !_autoTranslate),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -75,7 +90,7 @@ class _EventsScreenState extends State<EventsScreen> {
               controller: _searchController,
               onChanged: (val) => setState(() => _searchQuery = val),
               decoration: InputDecoration(
-                hintText: 'Search events...',
+                hintText: l10n.search_events,
                 prefixIcon: const Icon(Icons.search, color: Color(0xFF6B7280)),
                 filled: true,
                 fillColor: const Color(0xFFF3F4F6),
@@ -92,10 +107,21 @@ class _EventsScreenState extends State<EventsScreen> {
             child: Row(
               children: _filters.map((filter) {
                 final isSelected = _selectedCategory == filter;
+                final String filterLabel = () {
+                  switch (filter) {
+                    case 'All': return l10n.all;
+                    case 'Cleaning': return l10n.cleaning;
+                    case 'Workshops': return l10n.workshops;
+                    case 'Volunteering': return l10n.volunteering;
+                    case 'Music': return l10n.music;
+                    case 'Social': return l10n.social;
+                    default: return filter;
+                  }
+                }();
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
-                    label: Text(filter),
+                    label: Text(filterLabel),
                     selected: isSelected,
                     onSelected: (selected) {
                       if (selected) setState(() => _selectedCategory = filter);
@@ -124,34 +150,53 @@ class _EventsScreenState extends State<EventsScreen> {
 
                 final events = snapshot.data ?? [];
 
-                if (events.isEmpty) {
-                  return const Center(child: Text('No events found', style: TextStyle(color: Color(0xFF6B7280))));
-                }
-
                 return RefreshIndicator(
                   onRefresh: () async => setState(() {}),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(24),
-                    itemCount: events.length,
-                    itemBuilder: (context, index) {
+                  color: const Color(0xFF6366F1),
+                  child: events.isEmpty
+                    ? SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Container(
+                          height: MediaQuery.of(context).size.height * 0.5,
+                          alignment: Alignment.center,
+                          child: Text(l10n.no_events_found, style: const TextStyle(color: Color(0xFF6B7280))),
+                        ),
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(24),
+                        itemCount: events.length,
+                        itemBuilder: (context, index) {
                       final event = events[index];
                       final dateObj = event.get<DateTime>('date');
-                      final dateStr = dateObj != null ? DateFormat('EEE, MMM d • hh:mm a').format(dateObj) : 'No date';
+                      final locale = Localizations.localeOf(context).toString();
+                      final dateStr = dateObj != null ? DateFormat('EEE, MMM d • hh:mm a', locale).format(dateObj) : l10n.no_date;
 
                       final isOwner = event.get<ParseObject>('createdBy')?.objectId == _currentUser?.objectId;
                       
                       return GestureDetector(
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => EventDetailsScreen(eventId: event.objectId!))),
-                        child: EventListItem(
-                          title: event.get<String>('title') ?? 'Untitled',
-                          date: dateStr,
-                          location: event.get<String>('location') ?? 'Virtual',
-                          points: event.get<int>('points') ?? 0,
-                          category: event.get<String>('category') ?? 'General',
-                          isLoading: _loadingEventId == event.objectId,
-                          isOwner: isOwner,
-                          isJoined: eventProvider.isUserJoined(event.objectId),
-                           onJoin: () => eventProvider.joinEvent(event),
+                        child: FutureBuilder<List<String>>(
+                          future: Future.wait([
+                            _autoTranslate && isHindi ? TranslationService.translate(event.get<String>('title') ?? 'Untitled', 'hi') : Future.value(event.get<String>('title') ?? 'Untitled'),
+                            _autoTranslate && isHindi ? TranslationService.translate(event.get<String>('location') ?? 'Virtual', 'hi') : Future.value(event.get<String>('location') ?? 'Virtual'),
+                          ]),
+                          builder: (context, transSnapshot) {
+                            final translatedTitle = transSnapshot.data?[0] ?? event.get<String>('title') ?? 'Untitled';
+                            final translatedLocation = transSnapshot.data?[1] ?? event.get<String>('location') ?? 'Virtual';
+
+                            return EventListItem(
+                              title: translatedTitle,
+                              date: dateStr,
+                              location: translatedLocation,
+                              points: event.get<int>('points') ?? 0,
+                              category: event.get<String>('category') ?? 'General',
+                              isLoading: _loadingEventId == event.objectId,
+                              isOwner: isOwner,
+                              isJoined: eventProvider.isUserJoined(event.objectId),
+                               onJoin: () => eventProvider.joinEvent(event),
+                            );
+                          }
                         ),
                       );
                     },
@@ -169,7 +214,7 @@ class _EventsScreenState extends State<EventsScreen> {
         },
         backgroundColor: const Color(0xFF6366F1),
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Create Event', style: TextStyle(color: Colors.white)),
+        label: Text(l10n.create_event, style: const TextStyle(color: Colors.white)),
       ),
     );
   }

@@ -61,14 +61,14 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('My Profile', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+        title: Text(l10n.profile, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.redAccent),
-            tooltip: 'Logout',
+            tooltip: l10n.logout_tooltip,
             onPressed: () async {
               await _currentUser?.logout();
               if (mounted) {
@@ -81,25 +81,140 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
           : _currentUser == null
-              ? const Center(child: Text('User not found'))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  child: Column(
-                    children: [
-                      _buildProfileHeader(_currentUser!),
-                      const SizedBox(height: 32),
-                      _buildProfileItem(Icons.email_outlined, 'Email', _currentUser!.emailAddress ?? 'No email'),
-                      _buildProfileItem(Icons.phone_outlined, 'Phone', _currentUser!.get<String>('phone') ?? 'No phone'),
-                      _buildProfileItem(Icons.location_on_outlined, 'Location', _currentUser!.get<String>('location') ?? 'No location'),
-                      const SizedBox(height: 24),
-                      const Align(alignment: Alignment.centerLeft, child: Text('Interests', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
-                      const SizedBox(height: 12),
-                      _buildInterests(_currentUser!),
-                      const SizedBox(height: 32),
-                      _buildEditButton(context, _currentUser!),
+              ? Center(child: Text(l10n.user_not_found))
+              : RefreshIndicator(
+                  onRefresh: _loadAllData,
+                  color: const Color(0xFF6366F1),
+                  child: NestedScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: _buildProfileHeader(_currentUser!),
+                        ),
+                      ),
+                      SliverPersistentHeader(
+                        pinned: true,
+                        delegate: _SliverAppBarDelegate(
+                          TabBar(
+                            controller: _tabController,
+                            indicatorColor: const Color(0xFF6366F1),
+                            labelColor: const Color(0xFF6366F1),
+                            unselectedLabelColor: Colors.grey,
+                            tabs: [
+                              Tab(icon: const Icon(Icons.info_outline), text: l10n.info),
+                              Tab(icon: const Icon(Icons.grid_on), text: l10n.posts),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
+                    body: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildInfoTab(l10n),
+                        _buildPostGrid(l10n),
+                      ],
+                    ),
                   ),
                 ),
+    );
+  }
+
+  Widget _buildInfoTab(AppLocalizations l10n) {
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildProfileItem(Icons.email_outlined, l10n.email, _currentUser!.emailAddress ?? 'No email'),
+          _buildProfileItem(Icons.phone_outlined, l10n.phone, _currentUser!.get<String>('phone') ?? 'No phone'),
+          _buildProfileItem(Icons.location_on_outlined, l10n.location, _currentUser!.get<String>('location') ?? 'No location'),
+          const SizedBox(height: 24),
+          Text(l10n.interests, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          _buildInterests(_currentUser!, l10n),
+          const SizedBox(height: 32),
+          _buildEditButton(context, _currentUser!, l10n),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileItem(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: const Color(0xFF6366F1), size: 24),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
+              Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInterests(ParseUser user, AppLocalizations l10n) {
+    final List<dynamic> interests = user.get<List<dynamic>>('interests') ?? [];
+    if (interests.isEmpty) return Text(l10n.no_interests_specified, style: const TextStyle(color: Colors.grey));
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: interests.map((interest) {
+        final String interestStr = interest.toString();
+        final String label = () {
+          switch (interestStr) {
+            case 'Music': return l10n.music;
+            case 'Environment': return l10n.environment;
+            case 'Art': return l10n.art;
+            case 'Education': return l10n.education;
+            case 'Community': return l10n.community;
+            case 'Volunteering': return l10n.volunteering;
+            case 'Animal Care': return l10n.animal_care;
+            default: return interestStr;
+          }
+        }();
+        
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF374151))),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildEditButton(BuildContext context, ParseUser user, AppLocalizations l10n) {
+    return ElevatedButton(
+      onPressed: _navigateToEdit,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF6366F1),
+        foregroundColor: Colors.white,
+        minimumSize: const Size(double.infinity, 54),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        elevation: 0,
+      ),
+      child: Text(l10n.edit_profile, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -112,6 +227,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     } else if (file is String) {
       imageUrl = file;
     }
+
+    final int points = user.get<int>('points') ?? 0;
+    final int level = user.get<int>('level') ?? 1;
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       children: [
@@ -127,12 +246,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         ),
         const SizedBox(height: 16),
         Text(fullName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-        Text('${user.get<int>('points') ?? 0} Points • Level ${user.get<int>('level') ?? 1}', style: const TextStyle(color: Color(0xFF6366F1))),
+        Text(l10n.points_and_level(points, level), style: const TextStyle(color: Color(0xFF6366F1))),
       ],
     );
   }
 
-  Widget _buildPostGrid() {
+  Widget _buildPostGrid(AppLocalizations l10n) {
     if (_userPosts.isEmpty) {
       return Center(
         child: Column(
@@ -140,15 +259,19 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           children: [
             const Icon(Icons.camera_alt_outlined, size: 64, color: Colors.black54),
             const SizedBox(height: 12),
-            const Text('No Posts Yet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+            Text(l10n.no_events_added, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
             const SizedBox(height: 8),
-            Text('Capture your impact and share it with the community.', style: TextStyle(color: Colors.grey[600], fontSize: 14), textAlign: TextAlign.center),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Text(l10n.profile_caption, textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
+            ),
           ],
         ),
       );
     }
 
     return GridView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 1, mainAxisSpacing: 1),
       itemCount: _userPosts.length,

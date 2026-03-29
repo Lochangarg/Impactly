@@ -10,6 +10,7 @@ import '../../events/event_details_screen.dart';
 import '../../../core/providers/event_provider.dart';
 import '../../leaderboard/leaderboard_screen.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/services/translation_service.dart';
 
 class HomeContent extends StatefulWidget {
   final Function(int, {String? category})? onNavigate;
@@ -31,6 +32,22 @@ class _HomeContentState extends State<HomeContent> {
    Future<Map<String, dynamic>> _fetchHomeData() async {
     final user = await ParseService.getCurrentUser();
     final events = await ParseService.fetchEvents();
+    
+    // Auto-translate titles if Hindi
+    final locale = Localizations.maybeLocaleOf(context)?.toString() ?? 'en';
+    if (locale == 'hi') {
+      for (var e in events) {
+        final title = e.get<String>('title') ?? '';
+        final location = e.get<String>('location') ?? '';
+        
+        final translatedTitle = await TranslationService.translate(title, 'hi');
+        final translatedLocation = await TranslationService.translate(location, 'hi');
+        
+        e.set('title', translatedTitle);
+        e.set('location', translatedLocation);
+      }
+    }
+
     return {'user': user, 'events': events};
   }
 
@@ -53,6 +70,7 @@ class _HomeContentState extends State<HomeContent> {
           child: RefreshIndicator(
             onRefresh: () async => setState(() => _homeData = _fetchHomeData()),
             child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,7 +126,7 @@ class _HomeContentState extends State<HomeContent> {
                             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => EventDetailsScreen(eventId: e.objectId!))),
                             child: EventCard(
                               title: e.get<String>('title') ?? 'Untitled',
-                              date: date != null ? DateFormat('MMM d, hh:mm a').format(date) : 'No date',
+                              date: date != null ? DateFormat('MMM d, hh:mm a', Localizations.localeOf(context).toString()).format(date) : l10n.no_date,
                               location: e.get<String>('location') ?? 'Virtual',
                               imageUrl: '',
                               isOwner: e.get<ParseObject>('createdBy')?.objectId == user?.objectId,

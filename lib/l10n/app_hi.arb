@@ -74,5 +74,96 @@
   "comments": "टिप्पणियां",
   "no_comments": "अभी तक कोई टिप्पणी नहीं है।",
   "add_comment": "एक टिप्पणी जोड़ें...",
-  "post_comment": "पोस्ट करें"
+  "post_comment": "पोस्ट करें",
+  "interests": "रुचियां",
+  "info": "जानकारी",
+  "logout_tooltip": "लॉग आउट",
+  "user_not_found": "उपयोगकर्ता नहीं मिला",
+  "discover_events": "इवेंट्स खोजें",
+  "search_events": "इवेंट्स खोजें...",
+  "all": "सभी",
+  "volunteering": "स्वंयसेवा",
+  "create_event": "इवेंट बनाएं",
+  "create_new_event": "नया इवेंट बनाएं",
+  "event_title": "इवेंट का शीर्षक",
+  "event_title_hint": "जैसे: बीच सफाई अभियान",
+  "description_label": "विवरण",
+  "description_hint": "उपयोगकर्ताओं को इवेंट के बारे में बताएं...",
+  "location_label": "स्थान",
+  "location_hint": "जैसे: मरीन ड्राइव, मुंबई",
+  "category": "श्रेणी",
+  "points_reward": "अंक पुरस्कार",
+  "points_hint": "जैसे: 100",
+  "event_date": "इवेंट की तारीख",
+  "select_date": "तारीख चुनें",
+  "event_created": "इवेंट बनाया गया 🎉",
+  "please_select_date": "कृपया एक तारीख चुनें",
+  "field_required": "यह फ़ील्ड आवश्यक है",
+  "valid_number": "एक वैध संख्या दर्ज करें",
+  "impact_points": "इम्पैक्ट पॉइंट्स",
+  "level_text": "स्तर {level}",
+  "@level_text": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "view_ranking": "रैंकिंग देखें",
+  "explore_categories": "श्रेणियां खोजें",
+  "recently_added_events": "हाल ही में जोड़े गए इवेंट्स",
+  "see_all": "सभी देखें",
+  "no_events_added": "अभी तक कोई इवेंट नहीं जोड़ा गया",
+  "joined": "शामिल",
+  "created_by_you": "आपके द्वारा बनाया गया",
+  "join": "शामिल हों",
+  "community_feed": "कम्युनिटी फीड",
+  "no_posts_yet": "अभी तक कोई पोस्ट नहीं",
+  "be_the_first_to_share": "अपडेट शेयर करने वाले पहले व्यक्ति बनें!",
+  "new_post": "नई पोस्ट",
+  "post": "पोस्ट",
+  "event_update": "इवेंट अपडेट",
+  "select_joined_event": "शामिल इवेंट चुनें",
+  "join_event_to_post": "अपडेट पोस्ट करने के लिए किसी इवेंट में शामिल हों!",
+  "whats_the_update": "इस इवेंट का क्या अपडेट है?",
+  "add_photo": "फोटो जोड़ें",
+  "post_published": "पोस्ट प्रकाशित! ✨",
+  "write_something_error": "कृपया कुछ लिखें और एक इवेंट चुनें",
+  "recently": "अभी-अभी",
+  "joined_at": "शामिल हुए: {eventTitle}",
+  "@joined_at": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "post_update": "अपडेट पोस्ट करें",
+  "points_count": "+{count} अंक",
+  "environment": "पर्यावरण",
+  "art": "कला",
+  "education": "शिक्षा",
+  "community": "समुदाय",
+  "animal_care": "पशु देखभाल",
+  "no_interests_specified": "कोई रुचि निर्दिष्ट नहीं है।",
+  "profile_caption": "अपने प्रभाव को चित्रित करें और इसे समुदाय के साथ साझा करें।",
+  "points_and_level": "{points} पॉइंट्स • स्तर {level}",
+  "experience_impactly": "अपनी पसंदीदा भाषा में Impactly का अनुभव करें",
+  "@points_and_level": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      },
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "@points_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
+import '../../core/services/translation_service.dart';
 
 class CreateEventScreen extends StatefulWidget {
   const CreateEventScreen({super.key});
@@ -15,6 +17,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
   final _pointsController = TextEditingController();
+  bool _autoTranslate = true;
   
   String _selectedCategory = 'Cleaning';
   DateTime? _selectedDate;
@@ -72,10 +75,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     try {
       final user = await ParseUser.currentUser() as ParseUser?;
       
+      String title = _titleController.text.trim();
+      String description = _descriptionController.text.trim();
+      String location = _locationController.text.trim();
+
+      if (_autoTranslate) {
+        title = await TranslationService.translate(title, 'hi');
+        description = await TranslationService.translate(description, 'hi');
+        location = await TranslationService.translate(location, 'hi');
+      }
+
       final event = ParseObject('Events')
-        ..set('title', _titleController.text.trim())
-        ..set('description', _descriptionController.text.trim())
-        ..set('location', _locationController.text.trim())
+        ..set('title', title)
+        ..set('description', description)
+        ..set('location', location)
         ..set('category', _selectedCategory)
         ..set('points', int.parse(_pointsController.text.trim()))
         ..set('date', _selectedDate)
@@ -114,13 +127,27 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Create New Event', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(l10n.create_new_event, style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: const Color(0xFF111827),
+        actions: [
+          Row(
+            children: [
+              const Text('Auto-Hindi', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              Switch(
+                value: _autoTranslate,
+                onChanged: (val) => setState(() => _autoTranslate = val),
+                activeColor: const Color(0xFF6366F1),
+              ),
+            ],
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -130,16 +157,16 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildLabel('Event Title'),
-                _buildTextField(_titleController, 'e.g. Beach Cleanup Drive', Icons.title),
+                _buildLabel(l10n.event_title),
+                _buildTextField(_titleController, l10n.event_title_hint, Icons.title, l10n: l10n),
                 
                 const SizedBox(height: 20),
-                _buildLabel('Description'),
-                _buildTextField(_descriptionController, 'Tell users about the event...', Icons.description, maxLines: 3),
+                _buildLabel(l10n.description_label),
+                _buildTextField(_descriptionController, l10n.description_hint, Icons.description, maxLines: 3, l10n: l10n),
                 
                 const SizedBox(height: 20),
-                _buildLabel('Location'),
-                _buildTextField(_locationController, 'e.g. Marine Drive, Mumbai', Icons.location_on),
+                _buildLabel(l10n.location_label),
+                _buildTextField(_locationController, l10n.location_hint, Icons.location_on, l10n: l10n),
                 
                 const SizedBox(height: 20),
                 Row(
@@ -148,7 +175,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildLabel('Category'),
+                          _buildLabel(l10n.category),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
@@ -161,9 +188,19 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                                 isExpanded: true,
                                 icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF6B7280)),
                                 items: _categories.map((String category) {
+                                  final String categoryLabel = () {
+                                    switch (category) {
+                                      case 'Cleaning': return l10n.cleaning;
+                                      case 'Workshops': return l10n.workshops;
+                                      case 'Volunteering': return l10n.volunteering;
+                                      case 'Music': return l10n.music;
+                                      case 'Social': return l10n.social;
+                                      default: return category;
+                                    }
+                                  }();
                                   return DropdownMenuItem(
                                     value: category,
-                                    child: Text(category, style: const TextStyle(fontSize: 14)),
+                                    child: Text(categoryLabel, style: const TextStyle(fontSize: 14)),
                                   );
                                 }).toList(),
                                 onChanged: (value) {
@@ -180,8 +217,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildLabel('Points Reward'),
-                          _buildTextField(_pointsController, 'e.g. 100', Icons.stars, isNumber: true),
+                          _buildLabel(l10n.points_reward),
+                          _buildTextField(_pointsController, l10n.points_hint, Icons.stars, isNumber: true, l10n: l10n),
                         ],
                       ),
                     ),
@@ -189,7 +226,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ),
                 
                 const SizedBox(height: 20),
-                _buildLabel('Event Date'),
+                _buildLabel(l10n.event_date),
                 InkWell(
                   onTap: () => _selectDate(context),
                   child: Container(
@@ -204,7 +241,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         const SizedBox(width: 12),
                         Text(
                           _selectedDate == null 
-                            ? 'Select Date' 
+                            ? l10n.select_date 
                             : DateFormat('MMM d, yyyy').format(_selectedDate!),
                           style: TextStyle(
                             color: _selectedDate == null ? const Color(0xFF9CA3AF) : const Color(0xFF111827),
@@ -229,8 +266,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       elevation: 0,
                     ),
                     child: _isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Create Event', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text(l10n.create_event, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -255,7 +292,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, IconData icon, {int maxLines = 1, bool isNumber = false}) {
+  Widget _buildTextField(TextEditingController controller, String hint, IconData icon, {int maxLines = 1, bool isNumber = false, required AppLocalizations l10n}) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
@@ -273,8 +310,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       validator: (value) {
-        if (value == null || value.isEmpty) return 'Field is required';
-        if (isNumber && int.tryParse(value) == null) return 'Enter a valid number';
+        if (value == null || value.isEmpty) return l10n.field_required;
+        if (isNumber && int.tryParse(value) == null) return l10n.valid_number;
         return null;
       },
     );

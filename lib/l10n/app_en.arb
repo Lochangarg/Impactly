@@ -74,5 +74,96 @@
   "comments": "Comments",
   "no_comments": "No comments yet.",
   "add_comment": "Add a comment...",
-  "post_comment": "Post"
+  "post_comment": "Post",
+  "interests": "Interests",
+  "info": "Info",
+  "logout_tooltip": "Logout",
+  "user_not_found": "User not found",
+  "discover_events": "Discover Events",
+  "search_events": "Search events...",
+  "all": "All",
+  "volunteering": "Volunteering",
+  "create_event": "Create Event",
+  "create_new_event": "Create New Event",
+  "event_title": "Event Title",
+  "event_title_hint": "e.g. Beach Cleanup Drive",
+  "description_label": "Description",
+  "description_hint": "Tell users about the event...",
+  "location_label": "Location",
+  "location_hint": "e.g. Marine Drive, Mumbai",
+  "category": "Category",
+  "points_reward": "Points Reward",
+  "points_hint": "e.g. 100",
+  "event_date": "Event Date",
+  "select_date": "Select Date",
+  "event_created": "Event Created 🎉",
+  "please_select_date": "Please select a date",
+  "field_required": "Field is required",
+  "valid_number": "Enter a valid number",
+  "impact_points": "Impact Points",
+  "level_text": "Level {level}",
+  "@level_text": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "view_ranking": "View Ranking",
+  "explore_categories": "Explore Categories",
+  "recently_added_events": "Recently Added Events",
+  "see_all": "See All",
+  "no_events_added": "No events added yet",
+  "joined": "Joined",
+  "created_by_you": "Created By You",
+  "join": "Join",
+  "community_feed": "Community Feed",
+  "no_posts_yet": "No posts yet",
+  "be_the_first_to_share": "Be the first to share an update!",
+  "new_post": "New Post",
+  "post": "Post",
+  "event_update": "Event Update",
+  "select_joined_event": "Select joined event",
+  "join_event_to_post": "Join an event to post updates!",
+  "whats_the_update": "What's the update from this event?",
+  "add_photo": "Add Photo",
+  "post_published": "Post published! ✨",
+  "write_something_error": "Please write something and select an event",
+  "recently": "Recently",
+  "joined_at": "Joined: {eventTitle}",
+  "@joined_at": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "post_update": "Post Update",
+  "points_count": "+{count} pts",
+  "environment": "Environment",
+  "art": "Art",
+  "education": "Education",
+  "community": "Community",
+  "animal_care": "Animal Care",
+  "no_interests_specified": "No interests specified.",
+  "profile_caption": "Capture your impact and share it with the community.",
+  "points_and_level": "{points} Points • Level {level}",
+  "experience_impactly": "Experience Impactly in your preferred language",
+  "@points_and_level": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      },
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "@points_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

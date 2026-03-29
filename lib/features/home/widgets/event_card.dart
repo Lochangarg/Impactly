@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_constants.dart';
+import '../../../l10n/app_localizations.dart';
 
 class EventCard extends StatelessWidget {
   final String title;
@@ -23,6 +23,8 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Container(
       width: 280,
       margin: const EdgeInsets.only(right: 16),
@@ -108,8 +110,8 @@ class EventCard extends StatelessWidget {
                       ),
                       child: Text(
                         isOwner 
-                          ? AppConstants.ownerLabel 
-                          : (isJoined ? AppConstants.joinedLabel : 'Join'), 
+                          ? l10n.created_by_you 
+                          : (isJoined ? l10n.joined : l10n.join), 
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)
                       ),
                     ),
