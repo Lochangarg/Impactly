@@ -70,6 +70,13 @@
   "impactly_feed": "इम्पैक्टली फ़ीड",
   "feed_empty": "आपकी फ़ीड खाली है",
   "follow_causes": "उनके अपडेट देखने के लिए कुछ कारणों का पालन करें!",
+  "search_users": "उपयोगकर्ताओं को खोजें",
+  "add_friend": "दोस्त जोड़ें",
+  "remove_friend": "दोस्त हटाएँ",
+  "friend_added": "दोस्त जोड़ा गया!",
+  "friend_removed": "दोस्त हटा दिया गया।",
+  "no_users_found": "कोई उपयोगकर्ता नहीं मिला",
+  "search_hint": "नाम या उपयोगकर्ता नाम दर्ज करें...",
   "likes_count": "{count} लाइक",
   "@likes_count": {
     "placeholders": {
