@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import '../../l10n/app_localizations.dart';
 
+//updated commit fix
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
 
