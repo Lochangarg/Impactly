@@ -141,7 +141,32 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settings_and_privacy => 'सेटिंग्स और गोपनीयता';
 
   @override
+  String get settings => 'सेटिंग्स';
+
+  @override
   String get logout => 'लॉग आउट';
+
+  @override
+  String get change_password => 'पासवर्ड बदलें';
+
+  @override
+  String get current_password => 'वर्तमान पासवर्ड';
+
+  @override
+  String get new_password => 'नया पासवर्ड';
+
+  @override
+  String get confirm_new_password => 'नए पासवर्ड की पुष्टि करें';
+
+  @override
+  String get password_changed_success => 'पासवर्ड सफलतापूर्वक बदल गया!';
+
+  @override
+  String get password_change_failed =>
+      'पासवर्ड बदलने में विफल। कृपया अपना वर्तमान पासवर्ड जांचें।';
+
+  @override
+  String get passwords_do_not_match => 'नए पासवर्ड मेल नहीं खाते';
 
   @override
   String get join_event => 'इवेंट में शामिल हों';
