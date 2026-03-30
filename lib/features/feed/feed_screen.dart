@@ -6,6 +6,7 @@ import '../../core/services/parse_service.dart';
 import 'create_post_screen.dart';
 import 'post_detail_screen.dart';
 import '../social/user_search_screen.dart';
+import '../../core/navigation/main_screen.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/services/translation_service.dart';
 
@@ -82,10 +83,7 @@ class _FeedScreenState extends State<FeedScreen> {
           IconButton(
             icon: const Icon(Icons.search_outlined, color: Colors.black),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const UserSearchScreen()),
-              );
+              MainScreen.of(context)?.setTab(1);
             },
           ),
           IconButton(icon: const Icon(Icons.favorite_border, color: Colors.black), onPressed: () {}),
