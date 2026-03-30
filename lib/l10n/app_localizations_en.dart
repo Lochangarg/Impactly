@@ -225,6 +225,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get follow_causes => 'Follow some causes to see their updates!';
 
   @override
+  String get search_users => 'Search Users';
+
+  @override
+  String get add_friend => 'Add Friend';
+
+  @override
+  String get remove_friend => 'Remove Friend';
+
+  @override
+  String get friend_added => 'Friend added!';
+
+  @override
+  String get friend_removed => 'Friend removed.';
+
+  @override
+  String get no_users_found => 'No users found';
+
+  @override
+  String get search_hint => 'Enter name or username...';
+
+  @override
   String likes_count(int count) {
     return '$count likes';
   }

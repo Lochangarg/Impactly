@@ -227,6 +227,27 @@ class AppLocalizationsHi extends AppLocalizations {
       'उनके अपडेट देखने के लिए कुछ कारणों का पालन करें!';
 
   @override
+  String get search_users => 'उपयोगकर्ताओं को खोजें';
+
+  @override
+  String get add_friend => 'दोस्त जोड़ें';
+
+  @override
+  String get remove_friend => 'दोस्त हटाएँ';
+
+  @override
+  String get friend_added => 'दोस्त जोड़ा गया!';
+
+  @override
+  String get friend_removed => 'दोस्त हटा दिया गया।';
+
+  @override
+  String get no_users_found => 'कोई उपयोगकर्ता नहीं मिला';
+
+  @override
+  String get search_hint => 'नाम या उपयोगकर्ता नाम दर्ज करें...';
+
+  @override
   String likes_count(int count) {
     return '$count लाइक';
   }
