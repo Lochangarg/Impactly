@@ -140,7 +140,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_and_privacy => 'Settings and Privacy';
 
   @override
+  String get settings => 'Settings';
+
+  @override
   String get logout => 'Log out';
+
+  @override
+  String get change_password => 'Change Password';
+
+  @override
+  String get current_password => 'Current Password';
+
+  @override
+  String get new_password => 'New Password';
+
+  @override
+  String get confirm_new_password => 'Confirm New Password';
+
+  @override
+  String get password_changed_success => 'Password changed successfully!';
+
+  @override
+  String get password_change_failed =>
+      'Failed to change password. Please check your current password.';
+
+  @override
+  String get passwords_do_not_match => 'New passwords do not match';
 
   @override
   String get join_event => 'Join Event';
