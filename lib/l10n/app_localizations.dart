@@ -524,6 +524,48 @@ abstract class AppLocalizations {
   /// **'Follow some causes to see their updates!'**
   String get follow_causes;
 
+  /// No description provided for @search_users.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Users'**
+  String get search_users;
+
+  /// No description provided for @add_friend.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Friend'**
+  String get add_friend;
+
+  /// No description provided for @remove_friend.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Friend'**
+  String get remove_friend;
+
+  /// No description provided for @friend_added.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend added!'**
+  String get friend_added;
+
+  /// No description provided for @friend_removed.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend removed.'**
+  String get friend_removed;
+
+  /// No description provided for @no_users_found.
+  ///
+  /// In en, this message translates to:
+  /// **'No users found'**
+  String get no_users_found;
+
+  /// No description provided for @search_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter name or username...'**
+  String get search_hint;
+
   /// No description provided for @likes_count.
   ///
   /// In en, this message translates to:
