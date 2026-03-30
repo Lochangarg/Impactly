@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/services/parse_service.dart';
 import 'create_post_screen.dart';
 import 'post_detail_screen.dart';
+import '../social/user_search_screen.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/services/translation_service.dart';
 
@@ -78,7 +79,15 @@ class _FeedScreenState extends State<FeedScreen> {
         centerTitle: false,
         actions: [
           IconButton(icon: const Icon(Icons.notifications_none_outlined, color: Colors.black), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.search_outlined, color: Colors.black), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.search_outlined, color: Colors.black),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const UserSearchScreen()),
+              );
+            },
+          ),
         ],
       ),
       body: _isLoading
