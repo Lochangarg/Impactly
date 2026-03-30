@@ -50,7 +50,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
   Future<void> _toggleFriend(ParseUser user) async {
     final success = await ParseService.toggleFriend(user);
-    if (success && mounted) {
+    if (!mounted) return;
+    
+    if (success) {
       final isFriend = _friendIds.contains(user.objectId);
       setState(() {
         if (isFriend) {
@@ -69,6 +71,14 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to update friendship. Please try again.'),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -82,10 +92,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
         title: Text(l10n.search_users, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false, // It's now a tab
       ),
       body: Column(
         children: [
