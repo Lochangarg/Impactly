@@ -356,11 +356,59 @@ abstract class AppLocalizations {
   /// **'Settings and Privacy'**
   String get settings_and_privacy;
 
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
   /// No description provided for @logout.
   ///
   /// In en, this message translates to:
   /// **'Log out'**
   String get logout;
+
+  /// No description provided for @change_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get change_password;
+
+  /// No description provided for @current_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Password'**
+  String get current_password;
+
+  /// No description provided for @new_password.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get new_password;
+
+  /// No description provided for @confirm_new_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm New Password'**
+  String get confirm_new_password;
+
+  /// No description provided for @password_changed_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed successfully!'**
+  String get password_changed_success;
+
+  /// No description provided for @password_change_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to change password. Please check your current password.'**
+  String get password_change_failed;
+
+  /// No description provided for @passwords_do_not_match.
+  ///
+  /// In en, this message translates to:
+  /// **'New passwords do not match'**
+  String get passwords_do_not_match;
 
   /// No description provided for @join_event.
   ///
