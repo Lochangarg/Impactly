@@ -70,6 +70,13 @@
   "impactly_feed": "Impactly Feed",
   "feed_empty": "Your Feed is Empty",
   "follow_causes": "Follow some causes to see their updates!",
+  "search_users": "Search Users",
+  "add_friend": "Add Friend",
+  "remove_friend": "Remove Friend",
+  "friend_added": "Friend added!",
+  "friend_removed": "Friend removed.",
+  "no_users_found": "No users found",
+  "search_hint": "Enter name or username...",
   "likes_count": "{count} likes",
   "@likes_count": {
     "placeholders": {
