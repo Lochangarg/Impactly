@@ -253,4 +253,65 @@ class ParseService {
     final response = await query.query();
     return response.success ? (response.results?.cast<ParseUser>() ?? []) : [];
   }
+
+  // --- SOCIAL / FRIENDS ---
+  static Future<List<ParseUser>> searchUsers(String queryText) async {
+    final currentUser = await getCurrentUser();
+    
+    // Search by username
+    final queryUsername = QueryBuilder<ParseUser>(ParseUser.forQuery())
+      ..whereContains('username', queryText);
+    
+    // Search by fullName
+    final queryFullName = QueryBuilder<ParseUser>(ParseUser.forQuery())
+      ..whereContains('fullName', queryText);
+    
+    final mainQuery = QueryBuilder.or(ParseUser.forQuery(), [queryUsername, queryFullName]);
+    if (currentUser != null) {
+      mainQuery.whereNotEqualTo('objectId', currentUser.objectId);
+    }
+    mainQuery.setLimit(20);
+    
+    final response = await mainQuery.query();
+    return response.success ? (response.results?.cast<ParseUser>() ?? []) : [];
+  }
+
+  static Future<bool> toggleFriend(ParseUser targetUser) async {
+    final currentUser = await getCurrentUser();
+    if (currentUser == null) return false;
+
+    final relation = currentUser.getRelation('friends');
+    final isFriend = await checkIfFriend(targetUser);
+
+    if (isFriend) {
+      relation.remove(targetUser);
+    } else {
+      relation.add(targetUser);
+    }
+
+    final response = await currentUser.save();
+    return response.success;
+  }
+
+  static Future<bool> checkIfFriend(ParseObject targetUser) async {
+    final currentUser = await getCurrentUser();
+    if (currentUser == null) return false;
+
+    final relation = currentUser.getRelation('friends');
+    final query = relation.getQuery()
+      ..whereEqualTo('objectId', targetUser.objectId);
+    
+    final response = await query.query();
+    return response.success && response.results != null && response.results!.isNotEmpty;
+  }
+
+  static Future<List<ParseUser>> getFriends() async {
+    final currentUser = await getCurrentUser();
+    if (currentUser == null) return [];
+
+    final relation = currentUser.getRelation('friends');
+    final response = await relation.getQuery().query();
+    
+    return response.success ? (response.results?.cast<ParseUser>() ?? []) : [];
+  }
 }
