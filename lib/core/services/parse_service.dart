@@ -277,32 +277,48 @@ class ParseService {
   }
 
   static Future<bool> toggleFriend(ParseUser targetUser) async {
-    final currentUser = await getCurrentUser();
-    if (currentUser == null) return false;
+    try {
+      final currentUser = await ParseUser.currentUser() as ParseUser?;
+      if (currentUser == null) {
+        debugPrint('ERROR: No current user found.');
+        return false;
+      }
 
-    final relation = currentUser.getRelation('friends');
-    final isFriend = await checkIfFriend(targetUser);
+      final relation = currentUser.getRelation('friends');
+      final isFriend = await checkIfFriend(targetUser);
 
-    if (isFriend) {
-      relation.remove(targetUser);
-    } else {
-      relation.add(targetUser);
+      if (isFriend) {
+        relation.remove(targetUser);
+      } else {
+        relation.add(targetUser);
+      }
+
+      final response = await currentUser.save();
+      if (!response.success && response.error != null) {
+        debugPrint('PARSE ERROR during save: ${response.error!.message}');
+      }
+      return response.success;
+    } catch (e) {
+      debugPrint('EXCEPTION in toggleFriend: $e');
+      return false;
     }
-
-    final response = await currentUser.save();
-    return response.success;
   }
 
   static Future<bool> checkIfFriend(ParseObject targetUser) async {
-    final currentUser = await getCurrentUser();
-    if (currentUser == null) return false;
+    try {
+      final currentUser = await ParseUser.currentUser() as ParseUser?;
+      if (currentUser == null) return false;
 
-    final relation = currentUser.getRelation('friends');
-    final query = relation.getQuery()
-      ..whereEqualTo('objectId', targetUser.objectId);
-    
-    final response = await query.query();
-    return response.success && response.results != null && response.results!.isNotEmpty;
+      final relation = currentUser.getRelation('friends');
+      final query = relation.getQuery()
+        ..whereEqualTo('objectId', targetUser.objectId);
+      
+      final response = await query.query();
+      return response.success && response.results != null && response.results!.isNotEmpty;
+    } catch (e) {
+      debugPrint('EXCEPTION in checkIfFriend: $e');
+      return false;
+    }
   }
 
   static Future<List<ParseUser>> getFriends() async {
