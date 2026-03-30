@@ -5,6 +5,7 @@ import '../../core/services/parse_service.dart';
 import 'edit_profile_screen.dart';
 import '../language/screens/language_selection_screen.dart';
 import '../../l10n/app_localizations.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -67,13 +68,13 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         centerTitle: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.redAccent),
-            tooltip: l10n.logout_tooltip,
-            onPressed: () async {
-              await _currentUser?.logout();
-              if (mounted) {
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-              }
+            icon: const Icon(Icons.settings_outlined, color: Color(0xFF111827)),
+            tooltip: l10n.settings,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
             },
           )
         ],
