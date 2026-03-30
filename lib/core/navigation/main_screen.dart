@@ -3,6 +3,7 @@ import '../../features/home/home_screen.dart';
 import '../../features/events/events_screen.dart';
 import '../../features/feed/feed_screen.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/social/user_search_screen.dart';
 import '../../l10n/app_localizations.dart';
 
 class MainScreen extends StatefulWidget {
@@ -32,6 +33,7 @@ class _MainScreenState extends State<MainScreen> {
 
     final List<Widget> screens = [
       HomeScreen(onNavigate: (index, {category}) => setTab(index, category: category)),
+      const UserSearchScreen(),
       EventsScreen(key: ValueKey(_selectedCategory), initialCategory: _selectedCategory),
       const FeedScreen(),
       const ProfileScreen(),
@@ -50,6 +52,7 @@ class _MainScreenState extends State<MainScreen> {
         unselectedItemColor: const Color(0xFF9CA3AF),
         items: [
           BottomNavigationBarItem(icon: const Icon(Icons.home_outlined), activeIcon: const Icon(Icons.home_filled), label: l10n.home),
+          BottomNavigationBarItem(icon: const Icon(Icons.search), activeIcon: const Icon(Icons.search), label: l10n.search_users),
           BottomNavigationBarItem(icon: const Icon(Icons.calendar_month_outlined), activeIcon: const Icon(Icons.calendar_month), label: l10n.events),
           BottomNavigationBarItem(icon: const Icon(Icons.dynamic_feed_outlined), activeIcon: const Icon(Icons.dynamic_feed), label: l10n.feed),
           BottomNavigationBarItem(icon: const Icon(Icons.person_outline), activeIcon: const Icon(Icons.person), label: l10n.profile),
