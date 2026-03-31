@@ -284,13 +284,12 @@ class ParseService {
         return false;
       }
 
-      final relation = currentUser.getRelation('friends');
       final isFriend = await checkIfFriend(targetUser);
 
       if (isFriend) {
-        relation.remove(targetUser);
+        currentUser.removeRelation('friends', [targetUser]);
       } else {
-        relation.add(targetUser);
+        currentUser.addRelation('friends', [targetUser]);
       }
 
       final response = await currentUser.save();
@@ -329,5 +328,85 @@ class ParseService {
     final response = await relation.getQuery().query();
     
     return response.success ? (response.results?.cast<ParseUser>() ?? []) : [];
+  }
+
+  // --- CHAT / MESSAGES ---
+  static Future<bool> sendMessage(ParseUser receiver, String text) async {
+    final sender = await getCurrentUser();
+    if (sender == null) return false;
+
+    final message = ParseObject('DirectMessages')
+      ..set('sender', sender)
+      ..set('receiver', receiver)
+      ..set('content', text);
+
+    final response = await message.save();
+    return response.success;
+  }
+
+  static Future<List<ParseObject>> fetchMessages(ParseUser otherUser) async {
+    final currentUser = await getCurrentUser();
+    if (currentUser == null) return [];
+
+    final query1 = QueryBuilder<ParseObject>(ParseObject('DirectMessages'))
+      ..whereEqualTo('sender', currentUser.toPointer())
+      ..whereEqualTo('receiver', otherUser.toPointer());
+
+    final query2 = QueryBuilder<ParseObject>(ParseObject('DirectMessages'))
+      ..whereEqualTo('sender', otherUser.toPointer())
+      ..whereEqualTo('receiver', currentUser.toPointer());
+
+    final mainQuery = QueryBuilder.or(ParseObject('DirectMessages'), [query1, query2])
+      ..includeObject(['sender', 'receiver'])
+      ..orderByDescending('createdAt')
+      ..setLimit(50);
+
+    final response = await mainQuery.query();
+    return response.success ? (response.results?.cast<ParseObject>() ?? []) : [];
+  }
+
+  static Future<List<ParseUser>> fetchChatPartners() async {
+    final currentUser = await getCurrentUser();
+    if (currentUser == null) return [];
+
+    final query1 = QueryBuilder<ParseObject>(ParseObject('DirectMessages'))
+      ..whereEqualTo('sender', currentUser.toPointer());
+      
+    final query2 = QueryBuilder<ParseObject>(ParseObject('DirectMessages'))
+      ..whereEqualTo('receiver', currentUser.toPointer());
+
+    final mainQuery = QueryBuilder.or(ParseObject('DirectMessages'), [query1, query2])
+      ..includeObject(['sender', 'receiver'])
+      ..orderByDescending('createdAt')
+      ..setLimit(100);
+
+    final response = await mainQuery.query();
+    if (!response.success || response.results == null) {
+      // If no messages, return empty list. Or we could fallback to friends.
+      return [];
+    }
+
+    final Set<String> uniqueIds = {};
+    final List<ParseUser> partners = [];
+
+    for (var msg in response.results!) {
+      final obj = msg as ParseObject;
+      final senderObj = obj.get('sender');
+      final receiverObj = obj.get('receiver');
+      
+      if (senderObj != null && senderObj is ParseUser && senderObj.objectId != currentUser.objectId) {
+        if (!uniqueIds.contains(senderObj.objectId!)) {
+          uniqueIds.add(senderObj.objectId!);
+          partners.add(senderObj);
+        }
+      }
+      if (receiverObj != null && receiverObj is ParseUser && receiverObj.objectId != currentUser.objectId) {
+        if (!uniqueIds.contains(receiverObj.objectId!)) {
+          uniqueIds.add(receiverObj.objectId!);
+          partners.add(receiverObj);
+        }
+      }
+    }
+    return partners;
   }
 }
