@@ -3,6 +3,7 @@ import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/services/parse_service.dart';
 import '../../l10n/app_localizations.dart';
+import '../chat/chat_screen.dart';
 
 class UserSearchScreen extends StatefulWidget {
   const UserSearchScreen({super.key});
@@ -172,6 +173,12 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                                       Text('@$username', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
                                     ],
                                   ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.message_outlined, color: Color(0xFF6366F1)),
+                                  onPressed: () {
+                                    Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(otherUser: user)));
+                                  },
                                 ),
                                 ElevatedButton(
                                   onPressed: () => _toggleFriend(user),
