@@ -409,4 +409,71 @@ class ParseService {
     }
     return partners;
   }
+
+  // --- NOTIFICATIONS ---
+  static Future<List<ParseObject>> fetchNotifications() async {
+    final currentUser = await getCurrentUser();
+    if (currentUser == null) return [];
+
+    final query = QueryBuilder<ParseObject>(ParseObject('Notifications'))
+      ..whereEqualTo('receiver', currentUser.toPointer())
+      ..includeObject(['sender', 'event'])
+      ..orderByDescending('createdAt');
+
+    final response = await query.query();
+    return response.success ? (response.results?.cast<ParseObject>() ?? []) : [];
+  }
+
+  static Future<bool> sendFriendRequest(ParseUser receiver) async {
+    final sender = await getCurrentUser();
+    if (sender == null) return false;
+
+    // Check if request already exists
+    final checkQuery = QueryBuilder<ParseObject>(ParseObject('Notifications'))
+      ..whereEqualTo('sender', sender)
+      ..whereEqualTo('receiver', receiver)
+      ..whereEqualTo('type', 'friend_request');
+    
+    final checkResponse = await checkQuery.query();
+    if (checkResponse.success && checkResponse.results != null && checkResponse.results!.isNotEmpty) {
+      return true; // Already sent
+    }
+
+    final notification = ParseObject('Notifications')
+      ..set('sender', sender)
+      ..set('receiver', receiver)
+      ..set('type', 'friend_request')
+      ..set('status', 'pending')
+      ..set('message', '${sender.get<String>('fullName') ?? sender.username} sent you a friend request');
+
+    final response = await notification.save();
+    return response.success;
+  }
+
+  static Future<bool> respondToFriendRequest(ParseObject notification, bool accept) async {
+    if (accept) {
+      final sender = notification.get<ParseUser>('sender');
+      if (sender != null) {
+        await toggleFriend(sender);
+      }
+      notification.set('status', 'accepted');
+    } else {
+      notification.set('status', 'declined');
+    }
+    
+    final response = await notification.save();
+    return response.success;
+  }
+
+  // --- OTHER USER PROFILE ---
+  static Future<ParseUser?> fetchUserDetails(String userId) async {
+    final query = QueryBuilder<ParseUser>(ParseUser.forQuery())
+      ..whereEqualTo('objectId', userId);
+    
+    final response = await query.query();
+    if (response.success && response.results != null && response.results!.isNotEmpty) {
+      return response.results!.first as ParseUser;
+    }
+    return null;
+  }
 }

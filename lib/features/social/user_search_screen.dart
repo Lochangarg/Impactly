@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/services/parse_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../chat/chat_screen.dart';
+import '../profile/profile_screen.dart';
 
 class UserSearchScreen extends StatefulWidget {
   const UserSearchScreen({super.key});
@@ -55,6 +56,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     
     if (success) {
       final isFriend = _friendIds.contains(user.objectId);
+      if (!isFriend) {
+          ParseService.sendFriendRequest(user);
+      }
       setState(() {
         if (isFriend) {
           _friendIds.remove(user.objectId);
@@ -158,20 +162,36 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                             ),
                             child: Row(
                               children: [
-                                CircleAvatar(
-                                  radius: 28,
-                                  backgroundColor: const Color(0xFF6366F1).withOpacity(0.1),
-                                  backgroundImage: profileUrl != null ? CachedNetworkImageProvider(profileUrl) : null,
-                                  child: profileUrl == null ? const Icon(Icons.person, color: Color(0xFF6366F1)) : null,
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => ProfileScreen(userId: user.objectId)),
+                                    );
+                                  },
+                                  child: CircleAvatar(
+                                    radius: 28,
+                                    backgroundColor: const Color(0xFF6366F1).withOpacity(0.1),
+                                    backgroundImage: profileUrl != null ? CachedNetworkImageProvider(profileUrl) : null,
+                                    child: profileUrl == null ? const Icon(Icons.person, color: Color(0xFF6366F1)) : null,
+                                  ),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                      Text('@$username', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-                                    ],
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => ProfileScreen(userId: user.objectId)),
+                                      );
+                                    },
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                        Text('@$username', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                                      ],
+                                    ),
                                   ),
                                 ),
                                 IconButton(

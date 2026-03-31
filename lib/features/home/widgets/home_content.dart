@@ -12,6 +12,7 @@ import '../../leaderboard/leaderboard_screen.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/services/translation_service.dart';
 import '../../chat/direct_messages_screen.dart';
+import '../notifications_screen.dart';
 
 class HomeContent extends StatefulWidget {
   final Function(int, {String? category})? onNavigate;
@@ -94,13 +95,13 @@ class _HomeContentState extends State<HomeContent> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       CategoryIcon(label: l10n.cleaning, icon: Icons.cleaning_services, color: const Color(0xFF10B981), 
-                          onTap: () => widget.onNavigate?.call(1, category: 'Cleaning')),
+                          onTap: () => widget.onNavigate?.call(2, category: 'Cleaning')),
                       CategoryIcon(label: l10n.workshops, icon: Icons.school, color: const Color(0xFF3B82F6),
-                          onTap: () => widget.onNavigate?.call(1, category: 'Workshops')),
+                          onTap: () => widget.onNavigate?.call(2, category: 'Workshops')),
                       CategoryIcon(label: l10n.social, icon: Icons.volunteer_activism, color: const Color(0xFFF59E0B),
-                          onTap: () => widget.onNavigate?.call(1, category: 'Social')),
+                          onTap: () => widget.onNavigate?.call(2, category: 'Social')),
                       CategoryIcon(label: l10n.music, icon: Icons.music_note, color: const Color(0xFFEC4899),
-                          onTap: () => widget.onNavigate?.call(1, category: 'Music')),
+                          onTap: () => widget.onNavigate?.call(2, category: 'Music')),
                     ],
                   ),
                   const SizedBox(height: 40),
@@ -110,7 +111,7 @@ class _HomeContentState extends State<HomeContent> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(l10n.recently_added_events, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      TextButton(onPressed: () => widget.onNavigate?.call(1), child: Text(l10n.see_all)),
+                      TextButton(onPressed: () => widget.onNavigate?.call(2), child: Text(l10n.see_all)),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -164,7 +165,15 @@ class _HomeContentState extends State<HomeContent> {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const DirectMessagesScreen()));
               },
             ),
-            const Icon(Icons.notifications_outlined),
+            IconButton(
+              icon: const Icon(Icons.notifications_outlined),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                );
+              },
+            ),
           ],
         ),
       ],
