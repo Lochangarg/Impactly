@@ -11,6 +11,7 @@ import '../../../core/providers/event_provider.dart';
 import '../../leaderboard/leaderboard_screen.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/services/translation_service.dart';
+import '../../chat/direct_messages_screen.dart';
 
 class HomeContent extends StatefulWidget {
   final Function(int, {String? category})? onNavigate;
@@ -155,7 +156,17 @@ class _HomeContentState extends State<HomeContent> {
           Text(l10n.hi_user(name.split(' ')[0]), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           Text(l10n.ready_to_impact, style: const TextStyle(color: Colors.grey)),
         ]),
-        const Icon(Icons.notifications_outlined),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.message_outlined),
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const DirectMessagesScreen()));
+              },
+            ),
+            const Icon(Icons.notifications_outlined),
+          ],
+        ),
       ],
     );
   }
