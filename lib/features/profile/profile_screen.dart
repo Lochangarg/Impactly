@@ -61,65 +61,203 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(l10n.profile, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Color(0xFF111827)),
-            tooltip: l10n.settings,
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-          )
-        ],
-      ),
+      appBar: _buildAppBar(l10n),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1), strokeWidth: 2))
           : _currentUser == null
               ? Center(child: Text(l10n.user_not_found))
-              : RefreshIndicator(
-                  onRefresh: _loadAllData,
-                  color: const Color(0xFF6366F1),
-                  child: NestedScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: _buildProfileHeader(_currentUser!),
-                        ),
-                      ),
-                      SliverPersistentHeader(
-                        pinned: true,
-                        delegate: _SliverAppBarDelegate(
-                          TabBar(
-                            controller: _tabController,
-                            indicatorColor: const Color(0xFF6366F1),
-                            labelColor: const Color(0xFF6366F1),
-                            unselectedLabelColor: Colors.grey,
-                            tabs: [
-                              Tab(icon: const Icon(Icons.info_outline), text: l10n.info),
-                              Tab(icon: const Icon(Icons.grid_on), text: l10n.posts),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                    body: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildInfoTab(l10n),
-                        _buildPostGrid(l10n),
-                      ],
-                    ),
-                  ),
-                ),
+              : _buildBody(l10n),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(AppLocalizations l10n) {
+    return AppBar(
+      titleSpacing: 20,
+      title: Row(
+        children: [
+          const Icon(Icons.lock_outline, size: 18, color: Colors.black),
+          const SizedBox(width: 8),
+          Text(
+            _currentUser?.username ?? 'profile',
+            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18),
+          ),
+          const Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.black),
+        ],
+      ),
+      backgroundColor: Colors.white,
+      elevation: 0,
+      actions: [
+        IconButton(icon: const Icon(Icons.add_box_outlined, color: Colors.black), onPressed: () {}),
+        IconButton(icon: const Icon(Icons.menu, color: Colors.black), onPressed: () => _showSettingsSheet(l10n)),
+        IconButton(
+          icon: const Icon(Icons.settings_outlined, color: Colors.black),
+          tooltip: l10n.settings,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+            );
+          },
+        )
+      ],
+    );
+  }
+
+  void _showSettingsSheet(AppLocalizations l10n) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(height: 5, width: 40, margin: const EdgeInsets.symmetric(vertical: 10), decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(5))),
+          ListTile(leading: const Icon(Icons.settings_outlined), title: Text(l10n.settings), onTap: () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
+          }),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Log out', style: TextStyle(color: Colors.red)),
+            onTap: () async {
+              await _currentUser?.logout();
+              if (mounted) {
+                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+              }
+            },
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody(AppLocalizations l10n) {
+    return NestedScrollView(
+      headerSliverBuilder: (context, innerBoxIsScrolled) => [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeaderStats(l10n),
+                const SizedBox(height: 12),
+                _buildProfileBio(),
+                const SizedBox(height: 16),
+                _buildActionButtons(l10n),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        ),
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _SliverAppBarDelegate(
+            TabBar(
+              controller: _tabController,
+              indicatorColor: Colors.black,
+              labelColor: Colors.black,
+              unselectedLabelColor: Colors.grey,
+              indicatorWeight: 1,
+              tabs: [
+                Tab(icon: const Icon(Icons.grid_on_outlined), text: l10n.posts),
+                Tab(icon: const Icon(Icons.info_outline), text: l10n.info),
+              ],
+            ),
+          ),
+        ),
+      ],
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildPostGrid(l10n),
+          _buildInfoTab(l10n),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderStats(AppLocalizations l10n) {
+    final dynamic file = _currentUser!.get('profilePicture');
+    String? imageUrl;
+    if (file is ParseFileBase) imageUrl = file.url;
+    else if (file is String) imageUrl = file;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        CircleAvatar(
+          radius: 42,
+          backgroundColor: Colors.grey[200],
+          backgroundImage: imageUrl != null && imageUrl.isNotEmpty ? CachedNetworkImageProvider(imageUrl) : null,
+          child: imageUrl == null || imageUrl.isEmpty ? const Icon(Icons.person, size: 40, color: Colors.grey) : null,
+        ),
+        _buildStatItem(_userPosts.length.toString(), l10n.posts),
+        _buildStatItem((_currentUser!.get<int>('points') ?? 0).toString(), 'Impact'),
+        _buildStatItem((_currentUser!.get<int>('level') ?? 1).toString(), 'Level'),
+      ],
+    );
+  }
+
+  Widget _buildStatItem(String count, String label) {
+    return Column(
+      children: [
+        Text(count, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        Text(label, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+      ],
+    );
+  }
+
+  Widget _buildProfileBio() {
+    final String fullName = _currentUser!.get<String>('fullName') ?? 'User';
+    final String location = _currentUser!.get<String>('location') ?? 'Earth';
+    final List<dynamic> interests = _currentUser!.get<List<dynamic>>('interests') ?? [];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        const Text('Community Leader', style: TextStyle(color: Colors.grey, fontSize: 13)), // Placeholder category
+        Text('📍 Traveling from $location', style: const TextStyle(fontSize: 13)),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 4,
+          children: interests.map((i) => Text('#$i', style: const TextStyle(color: Color(0xFF00376B), fontSize: 13))).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons(AppLocalizations l10n) {
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: _navigateToEdit,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
+              alignment: Alignment.center,
+              child: Text(l10n.edit_profile, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
+            alignment: Alignment.center,
+            child: const Text('Share Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Container(
+          padding: const EdgeInsets.all(7),
+          decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
+          child: const Icon(Icons.person_add_outlined, size: 18),
+        ),
+      ],
     );
   }
 
@@ -138,7 +276,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           const SizedBox(height: 12),
           _buildInterests(_currentUser!, l10n),
           const SizedBox(height: 32),
-          _buildEditButton(context, _currentUser!, l10n),
         ],
       ),
     );
@@ -202,53 +339,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF374151))),
         );
       }).toList(),
-    );
-  }
-
-  Widget _buildEditButton(BuildContext context, ParseUser user, AppLocalizations l10n) {
-    return ElevatedButton(
-      onPressed: _navigateToEdit,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF6366F1),
-        foregroundColor: Colors.white,
-        minimumSize: const Size(double.infinity, 54),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        elevation: 0,
-      ),
-      child: Text(l10n.edit_profile, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-    );
-  }
-
-  Widget _buildProfileHeader(ParseUser user) {
-    final String fullName = user.get<String>('fullName') ?? 'User';
-    final dynamic file = user.get('profilePicture');
-    String? imageUrl;
-    if (file is ParseFileBase) {
-      imageUrl = file.url;
-    } else if (file is String) {
-      imageUrl = file;
-    }
-
-    final int points = user.get<int>('points') ?? 0;
-    final int level = user.get<int>('level') ?? 1;
-    final l10n = AppLocalizations.of(context)!;
-
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 50,
-          backgroundColor: const Color(0xFF6366F1),
-          backgroundImage: imageUrl != null && imageUrl.isNotEmpty
-              ? NetworkImage("$imageUrl?t=${DateTime.now().millisecondsSinceEpoch}")
-              : null,
-          child: imageUrl == null || imageUrl.isEmpty
-              ? const Icon(Icons.person, size: 50, color: Colors.white)
-              : null,
-        ),
-        const SizedBox(height: 16),
-        Text(fullName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-        Text(l10n.points_and_level(points, level), style: const TextStyle(color: Color(0xFF6366F1))),
-      ],
     );
   }
 
