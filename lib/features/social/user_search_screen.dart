@@ -92,11 +92,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(l10n.search_users, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-        backgroundColor: Colors.white,
-        elevation: 0,
+        title: Text(l10n.search_users, style: const TextStyle(fontWeight: FontWeight.bold)),
         automaticallyImplyLeading: false, // It's now a tab
       ),
       body: Column(
@@ -109,7 +107,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                 hintText: l10n.search_hint,
                 prefixIcon: const Icon(Icons.search, color: Color(0xFF6366F1)),
                 filled: true,
-                fillColor: const Color(0xFFF3F4F6),
+                fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide.none,
@@ -131,7 +129,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                             const SizedBox(height: 16),
                             Text(
                               _searchController.text.isEmpty ? 'Search for people' : l10n.no_users_found,
-                              style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 16),
                             ),
                           ],
                         ),
@@ -154,8 +152,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                             margin: const EdgeInsets.only(bottom: 16),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5)),
                               boxShadow: [
                                 BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
                               ],
@@ -188,8 +187,13 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
+<<<<<<< HEAD
                                         Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                                         Text('@$username', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+=======
+                                        Text(fullName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+                                        Text('@$username', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 14)),
+>>>>>>> 8c21739 (updates : dark mode, fixing post cards, adding friends page, making notificational panel working)
                                       ],
                                     ),
                                   ),
@@ -203,8 +207,8 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                                 ElevatedButton(
                                   onPressed: () => _toggleFriend(user),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: isFriend ? Colors.grey[200] : const Color(0xFF6366F1),
-                                    foregroundColor: isFriend ? Colors.black87 : Colors.white,
+                                    backgroundColor: isFriend ? Theme.of(context).dividerColor : const Color(0xFF6366F1),
+                                    foregroundColor: isFriend ? Theme.of(context).colorScheme.onSurface : Colors.white,
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                     padding: const EdgeInsets.symmetric(horizontal: 16),

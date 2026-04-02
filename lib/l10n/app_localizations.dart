@@ -254,6 +254,12 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get profile;
 
+  /// No description provided for @friends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get friends;
+
   /// No description provided for @explore_categories.
   ///
   /// In en, this message translates to:

@@ -320,11 +320,11 @@ class ParseService {
     }
   }
 
-  static Future<List<ParseUser>> getFriends() async {
-    final currentUser = await getCurrentUser();
-    if (currentUser == null) return [];
+  static Future<List<ParseUser>> getFriends({ParseUser? user}) async {
+    final targetUser = user ?? await getCurrentUser();
+    if (targetUser == null) return [];
 
-    final relation = currentUser.getRelation('friends');
+    final relation = targetUser.getRelation('friends');
     final response = await relation.getQuery().query();
     
     return response.success ? (response.results?.cast<ParseUser>() ?? []) : [];

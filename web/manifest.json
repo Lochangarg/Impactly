@@ -1,6 +1,6 @@
 {
-    "name": "impactly_new",
-    "short_name": "impactly_new",
+    "name": "Impactly",
+    "short_name": "Impactly",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

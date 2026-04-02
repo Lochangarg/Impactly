@@ -98,15 +98,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final postImageUrl = widget.post.get<ParseFile>('image')?.url;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(l10n.post, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
-          onPressed: () => Navigator.pop(context, true),
-        ),
+        title: Text(l10n.post, style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: Column(
         children: [
@@ -129,8 +123,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(widget.userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          Text(dateStr, style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                          Text(widget.userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+                          Text(dateStr, style: TextStyle(color: Theme.of(context).hintColor, fontSize: 13)),
                         ],
                       ),
                     ],
@@ -161,7 +155,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   // Content
                   Text(
                     widget.post.get<String>('content') ?? '',
-                    style: const TextStyle(fontSize: 16, height: 1.6, color: Color(0xFF374151)),
+                    style: TextStyle(fontSize: 16, height: 1.6, color: Theme.of(context).colorScheme.onSurface),
                   ),
                   
                   // Image
@@ -176,7 +170,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(
                             height: 300,
-                            color: Colors.grey[50],
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
                             child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                           ),
                         ),
@@ -193,29 +187,29 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         onTap: _handleLike,
                         child: Row(
                           children: [
-                            Icon(
-                              _isLiked ? Icons.favorite : Icons.favorite_border,
-                              color: _isLiked ? Colors.redAccent : Colors.grey[600],
-                            ),
+                              Icon(
+                                _isLiked ? Icons.favorite : Icons.favorite_border,
+                                color: _isLiked ? Colors.redAccent : Theme.of(context).hintColor,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.likes_count(_likeCount),
+                                style: TextStyle(color: Theme.of(context).hintColor, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        Row(
+                          children: [
+                            Icon(Icons.chat_bubble_outline, color: Theme.of(context).hintColor, size: 22),
                             const SizedBox(width: 8),
                             Text(
-                              l10n.likes_count(_likeCount),
-                              style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                              '${_comments.length} ${l10n.comments}',
+                              style: TextStyle(color: Theme.of(context).hintColor, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: 24),
-                      Row(
-                        children: [
-                          Icon(Icons.chat_bubble_outline, color: Colors.grey[600], size: 22),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${_comments.length} ${l10n.comments}',
-                            style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                   
@@ -231,9 +225,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       child: Column(
                         children: [
                           const SizedBox(height: 20),
-                          Icon(Icons.chat_bubble_outline, size: 40, color: Colors.grey[200]),
+                          Icon(Icons.chat_bubble_outline, size: 40, color: Theme.of(context).dividerColor),
                           const SizedBox(height: 8),
-                          Text(l10n.no_comments, style: TextStyle(color: Colors.grey[400])),
+                          Text(l10n.no_comments, style: TextStyle(color: Theme.of(context).hintColor)),
                         ],
                       ),
                     )
@@ -265,11 +259,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                    Text(userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Theme.of(context).colorScheme.onSurface)),
                                     const SizedBox(height: 4),
                                     Text(
                                       comment.get<String>('text') ?? '',
-                                      style: const TextStyle(color: Color(0xFF4B5563), fontSize: 14),
+                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), fontSize: 14),
                                     ),
                                   ],
                                 ),
@@ -288,7 +282,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           Container(
             padding: EdgeInsets.fromLTRB(20, 10, 20, MediaQuery.of(context).padding.bottom + 10),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               boxShadow: [
                 BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5)),
               ],
@@ -298,11 +292,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 Expanded(
                   child: TextField(
                     controller: _commentController,
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                     decoration: InputDecoration(
                       hintText: l10n.add_comment,
-                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      hintStyle: TextStyle(color: Theme.of(context).hintColor),
                       filled: true,
-                      fillColor: const Color(0xFFF9FAFB),
+                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(25),

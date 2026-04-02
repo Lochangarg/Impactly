@@ -43,10 +43,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF6366F1),
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: const Color(0xFF6366F1),
               onPrimary: Colors.white,
-              onSurface: Color(0xFF111827),
             ),
           ),
           child: child!,
@@ -130,12 +129,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(l10n.create_new_event, style: const TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: const Color(0xFF111827),
         actions: [
           Row(
             children: [
@@ -179,14 +175,14 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF3F4F6),
+                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 value: _selectedCategory,
                                 isExpanded: true,
-                                icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF6B7280)),
+                                icon: Icon(Icons.keyboard_arrow_down, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                                 items: _categories.map((String category) {
                                   final String categoryLabel = () {
                                     switch (category) {
@@ -232,19 +228,19 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF3F4F6),
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.calendar_today, size: 20, color: Color(0xFF6B7280)),
+                        Icon(Icons.calendar_today, size: 20, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                         const SizedBox(width: 12),
                         Text(
                           _selectedDate == null 
                             ? l10n.select_date 
                             : DateFormat('MMM d, yyyy').format(_selectedDate!),
                           style: TextStyle(
-                            color: _selectedDate == null ? const Color(0xFF9CA3AF) : const Color(0xFF111827),
+                            color: _selectedDate == null ? Theme.of(context).colorScheme.onSurface.withOpacity(0.4) : Theme.of(context).colorScheme.onSurface,
                             fontSize: 14,
                           ),
                         ),
@@ -283,10 +279,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF374151),
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
     );
@@ -299,10 +295,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
-        prefixIcon: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
+        hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4), fontSize: 14),
+        prefixIcon: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
         filled: true,
-        fillColor: const Color(0xFFF3F4F6),
+        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

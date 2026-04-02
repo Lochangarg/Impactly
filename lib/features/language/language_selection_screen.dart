@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/locale_provider.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../../l10n/app_localizations.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
@@ -28,27 +29,40 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     
+    final themeProvider = context.watch<ThemeProvider>();
+    
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (widget.isFromProfile)
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios, size: 20),
-                  onPressed: () => Navigator.pop(context),
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.centerLeft,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (widget.isFromProfile)
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios, size: 20),
+                      onPressed: () => Navigator.pop(context),
+                      padding: EdgeInsets.zero,
+                      alignment: Alignment.centerLeft,
+                    )
+                  else
+                    const SizedBox.shrink(),
+                  IconButton(
+                    icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+                    onPressed: () => themeProvider.toggleTheme(),
+                  ),
+                ],
+              ),
               const SizedBox(height: 20),
               Text(
                 l10n.select_language,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF111827),
+                  color: Theme.of(context).colorScheme.onSurface,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -56,7 +70,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
               Text(
                 "Experience Impactly in your preferred language",
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: const Color(0xFF6B7280),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
               const SizedBox(height: 48),
@@ -124,10 +138,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
+          color: isSelected ? const Color(0xFF6366F1).withOpacity(0.1) : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? const Color(0xFF6366F1) : const Color(0xFFE5E7EB),
+            color: isSelected ? const Color(0xFF6366F1) : Theme.of(context).dividerColor.withOpacity(0.5),
             width: 2,
           ),
         ),
@@ -137,7 +151,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: isSelected ? Colors.white : const Color(0xFFF3F4F6),
+                color: isSelected ? Theme.of(context).cardColor : Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
               ),
               alignment: Alignment.center,
@@ -152,14 +166,14 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? const Color(0xFF1E1B4B) : const Color(0xFF111827),
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   subtitle,
                   style: TextStyle(
                     fontSize: 14,
-                    color: isSelected ? const Color(0xFF4338CA) : const Color(0xFF6B7280),
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
               ],

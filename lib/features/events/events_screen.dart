@@ -65,11 +65,9 @@ class _EventsScreenState extends State<EventsScreen> {
     final isHindi = Localizations.localeOf(context).languageCode == 'hi';
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(l10n.discover_events, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-        backgroundColor: Colors.white,
-        elevation: 0,
+        title: Text(l10n.discover_events, style: const TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: false,
         actions: [
           IconButton(
@@ -91,9 +89,9 @@ class _EventsScreenState extends State<EventsScreen> {
               onChanged: (val) => setState(() => _searchQuery = val),
               decoration: InputDecoration(
                 hintText: l10n.search_events,
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF6B7280)),
+                prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                 filled: true,
-                fillColor: const Color(0xFFF3F4F6),
+                fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                 contentPadding: const EdgeInsets.symmetric(vertical: 16),
               ),
@@ -126,10 +124,10 @@ class _EventsScreenState extends State<EventsScreen> {
                     onSelected: (selected) {
                       if (selected) setState(() => _selectedCategory = filter);
                     },
-                    backgroundColor: const Color(0xFFF3F4F6),
+                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                     selectedColor: const Color(0xFF6366F1).withOpacity(0.1),
                     labelStyle: TextStyle(
-                      color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF6B7280),
+                      color: isSelected ? const Color(0xFF6366F1) : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: isSelected ? const Color(0xFF6366F1) : Colors.transparent)),

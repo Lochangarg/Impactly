@@ -42,17 +42,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< HEAD
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Notifications', style: TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF111827)),
+=======
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: const Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold)),
+>>>>>>> 8c21739 (updates : dark mode, fixing post cards, adding friends page, making notificational panel working)
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
           : _notifications.isEmpty
+<<<<<<< HEAD
               ? const Center(child: Text('No new notifications', style: TextStyle(color: Colors.grey)))
+=======
+              ? Center(child: Text('No new notifications', style: TextStyle(color: Theme.of(context).hintColor)))
+>>>>>>> 8c21739 (updates : dark mode, fixing post cards, adding friends page, making notificational panel working)
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: _notifications.length,
@@ -69,16 +79,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     return Card(
                       elevation: 0,
                       margin: const EdgeInsets.only(bottom: 12),
+<<<<<<< HEAD
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(color: Colors.grey[200]!),
+=======
+                      color: Theme.of(context).cardColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.5)),
+>>>>>>> 8c21739 (updates : dark mode, fixing post cards, adding friends page, making notificational panel working)
                       ),
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundImage: profileUrl != null ? CachedNetworkImageProvider(profileUrl) : null,
                           child: profileUrl == null ? const Icon(Icons.person) : null,
                         ),
+<<<<<<< HEAD
                         title: Text(message, style: const TextStyle(fontWeight: FontWeight.w500)),
+=======
+                        title: Text(message, style: TextStyle(fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
+>>>>>>> 8c21739 (updates : dark mode, fixing post cards, adding friends page, making notificational panel working)
                         subtitle: type == 'friend_request' && status == 'pending'
                             ? Padding(
                                 padding: const EdgeInsets.only(top: 8.0),
@@ -92,12 +113,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     const SizedBox(width: 8),
                                     TextButton(
                                       onPressed: () => _respond(note, false),
+<<<<<<< HEAD
                                       child: const Text('Decline', style: TextStyle(color: Colors.grey)),
+=======
+                                      child: Text('Decline', style: TextStyle(color: Theme.of(context).hintColor)),
+>>>>>>> 8c21739 (updates : dark mode, fixing post cards, adding friends page, making notificational panel working)
                                     ),
                                   ],
                                 ),
                               )
+<<<<<<< HEAD
                             : status != null ? Text(status.toUpperCase(), style: const TextStyle(fontSize: 10, color: Colors.blueGrey)) : null,
+=======
+                            : status != null ? Text(status.toUpperCase(), style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))) : null,
+>>>>>>> 8c21739 (updates : dark mode, fixing post cards, adding friends page, making notificational panel working)
                         onTap: () {
                           if (sender != null) {
                              Navigator.push(

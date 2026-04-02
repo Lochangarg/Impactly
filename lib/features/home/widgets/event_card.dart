@@ -29,12 +29,12 @@ class EventCard extends StatelessWidget {
       width: 280,
       margin: const EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF3F4F6), width: 1.5),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -46,12 +46,12 @@ class EventCard extends StatelessWidget {
           // Event Image (Placeholder)
           Container(
             height: 140,
-            decoration: const BoxDecoration(
-              color: Color(0xFFEEF2FF),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
-            child: const Center(
-              child: Icon(Icons.event_outlined, size: 40, color: Color(0xFF6366F1)),
+            child: Center(
+              child: Icon(Icons.event_outlined, size: 40, color: Theme.of(context).colorScheme.primary),
             ),
           ),
           Padding(
@@ -61,10 +61,10 @@ class EventCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF111827),
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -72,11 +72,11 @@ class EventCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today, size: 14, color: Color(0xFF6B7280)),
+                    Icon(Icons.calendar_today, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                     const SizedBox(width: 6),
                     Text(
                       date,
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                     ),
                   ],
                 ),
@@ -86,13 +86,13 @@ class EventCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF6B7280)),
+                        Icon(Icons.location_on_outlined, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                         const SizedBox(width: 4),
                         SizedBox(
                           width: 80,
                           child: Text(
                             location,
-                            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -102,8 +102,8 @@ class EventCard extends StatelessWidget {
                     ElevatedButton(
                       onPressed: (isOwner || isJoined) ? null : onJoin,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: (isOwner || isJoined) ? Colors.grey.shade300 : const Color(0xFF6366F1),
-                        foregroundColor: (isOwner || isJoined) ? Colors.grey.shade600 : Colors.white,
+                        backgroundColor: (isOwner || isJoined) ? Theme.of(context).dividerColor : const Color(0xFF6366F1),
+                        foregroundColor: (isOwner || isJoined) ? Theme.of(context).colorScheme.onSurface.withOpacity(0.5) : Colors.white,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

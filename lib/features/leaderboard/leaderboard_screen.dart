@@ -21,14 +21,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Impact Leaderboard', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+        title: const Text('Impact Leaderboard', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -54,7 +52,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   const SizedBox(height: 40),
                   const Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('All Contributers', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    child: Text('All Contributors', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(height: 16),
                   ...users.asMap().entries.map((entry) {
@@ -104,10 +102,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     padding: const EdgeInsets.only(top: 10),
                     child: CircleAvatar(
                       radius: avatarSize / 2,
-                      backgroundColor: Colors.grey[200],
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                       child: Text(
                         (user.get<String>('fullName') ?? '?')[0].toUpperCase(),
-                        style: TextStyle(fontSize: avatarSize / 3, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: avatarSize / 3, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                       ),
                     ),
                   ),
@@ -135,7 +133,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   gradient: LinearGradient(
                     colors: isFirst 
                       ? [const Color(0xFF6366F1), const Color(0xFF8B5CF6)]
-                      : [const Color(0xFFF3F4F6), const Color(0xFFE5E7EB)],
+                      : [Theme.of(context).colorScheme.surfaceContainerHighest, Theme.of(context).colorScheme.surface],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -150,7 +148,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     style: TextStyle(
                       fontSize: 24, 
                       fontWeight: FontWeight.bold,
-                      color: isFirst ? Colors.white : Colors.grey[600],
+                      color: isFirst ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                     ),
                   ),
                 ),
@@ -167,7 +165,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -176,7 +174,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.grey[100]!),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5)),
       ),
       child: Row(
         children: [
@@ -186,14 +184,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               rank.toString(),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: rank <= 3 ? const Color(0xFF6366F1) : Colors.grey[400],
+                color: rank <= 3 ? const Color(0xFF6366F1) : Theme.of(context).hintColor.withOpacity(0.4),
                 fontSize: 16,
               ),
             ),
           ),
           CircleAvatar(
             radius: 20,
-            backgroundColor: const Color(0xFFF3F4F6),
+            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
             child: Text(
               (user.get<String>('fullName') ?? 'U')[0].toUpperCase(),
               style: const TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.bold),
@@ -206,11 +204,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               children: [
                 Text(
                   user.get<String>('fullName') ?? 'User',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface),
                 ),
                 Text(
                   'Level ${user.get<int>('level') ?? 1}',
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12),
                 ),
               ],
             ),

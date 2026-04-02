@@ -47,9 +47,6 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setTab(index),
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF6366F1),
-        unselectedItemColor: const Color(0xFF9CA3AF),
         items: [
           BottomNavigationBarItem(icon: const Icon(Icons.home_outlined), activeIcon: const Icon(Icons.home_filled), label: l10n.home),
           BottomNavigationBarItem(icon: const Icon(Icons.search), activeIcon: const Icon(Icons.search), label: l10n.search_users),

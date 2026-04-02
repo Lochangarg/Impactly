@@ -30,24 +30,24 @@ class AuthField extends StatelessWidget {
       obscureText: isPasswordField,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
-      style: const TextStyle(fontSize: 15, color: Color(0xFF111827)),
+      style: TextStyle(fontSize: 15, color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hintText,
         prefixIcon: prefixIcon != null 
-          ? Icon(prefixIcon, size: 20, color: const Color(0xFF6B7280)) 
+          ? Icon(prefixIcon, size: 20, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)) 
           : null,
         prefixText: prefixText,
-        prefixStyle: const TextStyle(
-          color: Color(0xFF111827),
+        prefixStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.bold,
           fontSize: 15,
         ),
-        hintStyle: const TextStyle(
-          color: Color(0xFF9CA3AF),
+        hintStyle: TextStyle(
+          color: Theme.of(context).hintColor,
           fontSize: 14,
         ),
         filled: true,
-        fillColor: const Color(0xFFF9FAFB),
+        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,
           vertical: 18,
@@ -58,8 +58,8 @@ class AuthField extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: Color(0xFFE5E7EB),
+          borderSide: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.5),
             width: 1,
           ),
         ),

@@ -87,6 +87,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile => 'Profile';
 
   @override
+  String get friends => 'Friends';
+
+  @override
   String get explore_categories => 'Explore Categories';
 
   @override

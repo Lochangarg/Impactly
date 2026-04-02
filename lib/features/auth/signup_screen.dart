@@ -2,6 +2,8 @@ import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../l10n/app_localizations.dart';
+import '../../core/providers/theme_provider.dart';
+import 'package:provider/provider.dart';
 import 'widgets/auth_field.dart';
 import 'widgets/auth_button.dart';
 import '../onboarding/interests_screen.dart';
@@ -116,16 +118,24 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
+    final themeProvider = context.watch<ThemeProvider>();
+    
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF111827), size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () => themeProvider.toggleTheme(),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -139,13 +149,13 @@ class _SignupScreenState extends State<SignupScreen> {
                   l10n.create_account,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF111827),
+                    color: Theme.of(context).colorScheme.onSurface,
                     letterSpacing: -1,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(l10n.join_community, 
-                  style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 16)),
                 const SizedBox(height: 32),
                 
                 _buildLabel(l10n.full_name),
@@ -267,14 +277,14 @@ class _SignupScreenState extends State<SignupScreen> {
                     children: [
                       Text(
                         l10n.already_have_account,
-                        style: const TextStyle(color: Color(0xFF6B7280)),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context),
                         child: Text(
                           l10n.login,
-                          style: const TextStyle(
-                            color: Color(0xFF6366F1),
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -296,7 +306,11 @@ class _SignupScreenState extends State<SignupScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF374151)),
+        style: TextStyle(
+          fontSize: 14, 
+          fontWeight: FontWeight.w600, 
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
     );
   }

@@ -12,6 +12,7 @@ import 'core/providers/locale_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'routes/app_routes.dart';
 import 'features/language/screens/language_selection_screen.dart';
+import 'core/providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +33,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => EventProvider()),
       ],
@@ -61,12 +63,14 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LocaleProvider>(
-      builder: (context, localeProvider, _) {
+    return Consumer2<LocaleProvider, ThemeProvider>(
+      builder: (context, localeProvider, themeProvider, _) {
         return MaterialApp(
           title: 'Impactly',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
           locale: localeProvider.locale,
           localizationsDelegates: const [
             AppLocalizations.delegate,

@@ -33,12 +33,12 @@ class EventListItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF3F4F6), width: 1.5),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -93,31 +93,31 @@ class EventListItem extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF111827),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.calendar_today_outlined, size: 14, color: Color(0xFF6B7280)),
+              Icon(Icons.calendar_today_outlined, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
               const SizedBox(width: 6),
               Text(
                 date,
-                style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Row(
             children: [
-              const Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF6B7280)),
+              Icon(Icons.location_on_outlined, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
               const SizedBox(width: 6),
               Text(
                 location,
-                style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
               ),
             ],
           ),
@@ -127,8 +127,8 @@ class EventListItem extends StatelessWidget {
             child: ElevatedButton(
               onPressed: (isLoading || isOwner || isJoined) ? null : onJoin,
               style: ElevatedButton.styleFrom(
-                backgroundColor: (isOwner || isJoined) ? Colors.grey.shade300 : const Color(0xFF6366F1),
-                foregroundColor: (isOwner || isJoined) ? Colors.grey.shade600 : Colors.white,
+                backgroundColor: (isOwner || isJoined) ? Theme.of(context).dividerColor : const Color(0xFF6366F1),
+                foregroundColor: (isOwner || isJoined) ? Theme.of(context).colorScheme.onSurface.withOpacity(0.5) : Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

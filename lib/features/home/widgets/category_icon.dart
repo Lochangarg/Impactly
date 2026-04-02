@@ -38,10 +38,10 @@ class CategoryIcon extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF374151),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ],

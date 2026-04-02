@@ -44,22 +44,19 @@ class _DirectMessagesScreenState extends State<DirectMessagesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Messages', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        title: const Text('Messages', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: _isLoading 
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
           : _chatPartners.isEmpty 
-            ? const Center(
-                child: Text('No messages yet. Add some friends to chat!', style: TextStyle(color: Colors.grey, fontSize: 16)),
+            ? Center(
+                child: Text('No messages yet. Add some friends to chat!', style: TextStyle(color: Theme.of(context).hintColor, fontSize: 16)),
               )
             : ListView.separated(
                 itemCount: _chatPartners.length,
-                separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFE5E7EB)),
+                separatorBuilder: (context, index) => Divider(height: 1, color: Theme.of(context).dividerColor.withOpacity(0.5)),
                 itemBuilder: (context, index) {
                   final user = _chatPartners[index];
                   final String fullName = user.get<String>('fullName') ?? user.username ?? 'User';
@@ -74,12 +71,12 @@ class _DirectMessagesScreenState extends State<DirectMessagesScreen> {
                     leading: CircleAvatar(
                       radius: 26,
                       backgroundColor: const Color(0xFF6366F1).withOpacity(0.1),
-                      backgroundImage: profileUrl != null ? CachedNetworkImageProvider(profileUrl) : null,
+                      backgroundImage: profileUrl != null ? CachedNetworkImageProvider(profileUrl!) : null,
                       child: profileUrl == null ? const Icon(Icons.person, color: Color(0xFF6366F1)) : null,
                     ),
-                    title: Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    subtitle: Text('@$username', style: const TextStyle(color: Colors.grey)),
-                    trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                    title: Text(fullName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+                    subtitle: Text('@$username', style: TextStyle(color: Theme.of(context).hintColor)),
+                    trailing: Icon(Icons.chevron_right, color: Theme.of(context).hintColor),
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(otherUser: user)));
                     },

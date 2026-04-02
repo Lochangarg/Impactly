@@ -88,6 +88,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get profile => 'प्रोफ़ाइल';
 
   @override
+  String get friends => 'दोस्त';
+
+  @override
   String get explore_categories => 'श्रेणियां खोजें';
 
   @override

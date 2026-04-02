@@ -87,12 +87,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     final isJoined = eventProvider.isUserJoined(_event!.objectId);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF111827)),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -103,7 +101,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             Container(
               height: 250,
               width: double.infinity,
-              color: const Color(0xFFEEF2FF),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
               child: const Center(child: Icon(Icons.event_available, size: 80, color: Color(0xFF6366F1))),
             ),
             Padding(
@@ -120,17 +118,17 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     child: Text(category, style: const TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.bold, fontSize: 12)),
                   ),
                   const SizedBox(height: 16),
-                  Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                  Text(title, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
                   const SizedBox(height: 24),
-                  _buildInfoRow(Icons.calendar_month_outlined, l10n.when, dateStr),
+                  _buildInfoRow(context, Icons.calendar_month_outlined, l10n.when, dateStr),
                   const SizedBox(height: 16),
-                  _buildInfoRow(Icons.location_on_outlined, l10n.location, location),
+                  _buildInfoRow(context, Icons.location_on_outlined, l10n.location, location),
                   const SizedBox(height: 16),
-                  _buildInfoRow(Icons.stars_outlined, l10n.reward, '+$points ${l10n.points_unit}'),
-                  const Divider(height: 48, color: Color(0xFFF3F4F6), thickness: 1.5),
-                  Text(l10n.about_event, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  _buildInfoRow(context, Icons.stars_outlined, l10n.reward, '+$points ${l10n.points_unit}'),
+                  Divider(height: 48, color: Theme.of(context).dividerColor.withOpacity(0.5), thickness: 1.5),
+                  Text(l10n.about_event, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
                   const SizedBox(height: 12),
-                  Text(description, style: const TextStyle(color: Color(0xFF4B5563), height: 1.6, fontSize: 15)),
+                  Text(description, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), height: 1.6, fontSize: 15)),
                   const SizedBox(height: 32),
                   Row(
                     children: [
@@ -139,8 +137,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(l10n.organized_by, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
-                          Text(creatorName, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                          Text(l10n.organized_by, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 12)),
+                          Text(creatorName, style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
                         ],
                       ),
                     ],
@@ -155,8 +153,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))],
+          color: Theme.of(context).cardColor,
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.05), blurRadius: 20, offset: const Offset(0, -5))],
         ),
         child: SizedBox(
           width: double.infinity,
@@ -164,8 +162,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           child: ElevatedButton(
             onPressed: (isOwner || isJoined || _isActionLoading) ? null : () => _onJoinEvent(l10n),
             style: ElevatedButton.styleFrom(
-              backgroundColor: (isOwner || isJoined) ? Colors.grey.shade300 : const Color(0xFF6366F1),
-              foregroundColor: (isOwner || isJoined) ? Colors.grey.shade600 : Colors.white,
+              backgroundColor: (isOwner || isJoined) ? Theme.of(context).dividerColor : const Color(0xFF6366F1),
+              foregroundColor: (isOwner || isJoined) ? Theme.of(context).colorScheme.onSurface.withOpacity(0.5) : Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               elevation: 0,
             ),
@@ -181,20 +179,20 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(8)),
-          child: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
+          decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(8)),
+          child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
         ),
         const SizedBox(width: 16),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+            Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 12)),
+            Text(value, style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
           ],
         ),
       ],
