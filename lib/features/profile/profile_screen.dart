@@ -15,29 +15,47 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
+  final String? _targetUserId;
   ParseUser? _currentUser;
   bool _isLoading = true;
   List<ParseObject> _userPosts = [];
+  List<ParseUser> _userFriends = [];
   late TabController _tabController;
+  bool _isMe = true;
+
+  _ProfileScreenState(this._targetUserId);
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _isMe = _targetUserId == null;
+    _tabController = TabController(length: _isMe ? 2 : 1, vsync: this);
     _loadAllData();
   }
 
   Future<void> _loadAllData() async {
     setState(() => _isLoading = true);
     try {
-      final user = await ParseUser.currentUser() as ParseUser?;
+      ParseUser? user;
+      if (_isMe) {
+        user = await ParseUser.currentUser() as ParseUser?;
+        if (user != null) await user.fetch();
+      } else {
+        user = await ParseService.fetchUserDetails(_targetUserId!);
+        final me = await ParseUser.currentUser() as ParseUser?;
+        if (user?.objectId == me?.objectId) {
+          _isMe = true;
+        }
+      }
+
       if (user != null) {
-        await user.fetch();
         final posts = await ParseService.fetchUserPosts(user);
+        final friends = await ParseService.getFriends(user: user);
         if (mounted) {
           setState(() {
             _currentUser = user;
             _userPosts = posts;
+            _userFriends = friends;
             _isLoading = false;
           });
         }
@@ -60,285 +78,125 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(l10n),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: Text(l10n.profile, style: const TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: false,
+        actions: [
+          if (_isMe)
+            IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: l10n.settings,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                );
+              },
+            )
+        ],
+      ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1), strokeWidth: 2))
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
           : _currentUser == null
               ? Center(child: Text(l10n.user_not_found))
-              : _buildBody(l10n),
+              : RefreshIndicator(
+                  onRefresh: _loadAllData,
+                  color: const Color(0xFF6366F1),
+                  child: NestedScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: _buildProfileHeader(_currentUser!),
+                        ),
+                      ),
+                      SliverPersistentHeader(
+                        pinned: true,
+                        delegate: _SliverAppBarDelegate(
+                          TabBar(
+                            controller: _tabController,
+                            indicatorColor: const Color(0xFF6366F1),
+                            labelColor: const Color(0xFF6366F1),
+                            unselectedLabelColor: Colors.grey,
+                            tabs: [
+                              Tab(icon: const Icon(Icons.grid_on), text: l10n.posts),
+                              if (_isMe) Tab(icon: const Icon(Icons.people_outline), text: l10n.friends),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    body: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildPostGrid(l10n),
+                        if (_isMe) _buildFriendsTab(l10n),
+                      ],
+                    ),
+                  ),
+                ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar(AppLocalizations l10n) {
-    return AppBar(
-      titleSpacing: 20,
-      title: Row(
-        children: [
-          const Icon(Icons.lock_outline, size: 18, color: Colors.black),
-          const SizedBox(width: 8),
-          Text(
-            _currentUser?.username ?? 'profile',
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18),
-          ),
-          const Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.black),
-        ],
-      ),
-      backgroundColor: Colors.white,
-      elevation: 0,
-      actions: [
-        IconButton(icon: const Icon(Icons.add_box_outlined, color: Colors.black), onPressed: () {}),
-        IconButton(icon: const Icon(Icons.menu, color: Colors.black), onPressed: () => _showSettingsSheet(l10n)),
-        IconButton(
-          icon: const Icon(Icons.settings_outlined, color: Colors.black),
-          tooltip: l10n.settings,
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const SettingsScreen()),
-            );
-          },
-        )
-      ],
-    );
-  }
-
-  void _showSettingsSheet(AppLocalizations l10n) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(height: 5, width: 40, margin: const EdgeInsets.symmetric(vertical: 10), decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(5))),
-          ListTile(leading: const Icon(Icons.settings_outlined), title: Text(l10n.settings), onTap: () {
-            Navigator.pop(context);
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
-          }),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Log out', style: TextStyle(color: Colors.red)),
-            onTap: () async {
-              await _currentUser?.logout();
-              if (mounted) {
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-              }
-            },
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBody(AppLocalizations l10n) {
-    return NestedScrollView(
-      headerSliverBuilder: (context, innerBoxIsScrolled) => [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeaderStats(l10n),
-                const SizedBox(height: 12),
-                _buildProfileBio(),
-                const SizedBox(height: 16),
-                _buildActionButtons(l10n),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-        ),
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: _SliverAppBarDelegate(
-            TabBar(
-              controller: _tabController,
-              indicatorColor: Colors.black,
-              labelColor: Colors.black,
-              unselectedLabelColor: Colors.grey,
-              indicatorWeight: 1,
-              tabs: [
-                Tab(icon: const Icon(Icons.grid_on_outlined), text: l10n.posts),
-                Tab(icon: const Icon(Icons.info_outline), text: l10n.info),
-              ],
-            ),
-          ),
-        ),
-      ],
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildPostGrid(l10n),
-          _buildInfoTab(l10n),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderStats(AppLocalizations l10n) {
-    final dynamic file = _currentUser!.get('profilePicture');
+  Widget _buildProfileHeader(ParseUser user) {
+    final String fullName = user.get<String>('fullName') ?? 'User';
+    final dynamic file = user.get('profilePicture');
     String? imageUrl;
-    if (file is ParseFileBase) imageUrl = file.url;
-    else if (file is String) imageUrl = file;
+    if (file is ParseFileBase) {
+      imageUrl = file.url;
+    } else if (file is String) {
+      imageUrl = file;
+    }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final int points = user.get<int>('totalXP') ?? 0;
+    final int level = user.get<int>('level') ?? 1;
+    final l10n = AppLocalizations.of(context)!;
+
+    return Column(
       children: [
         CircleAvatar(
-          radius: 42,
-          backgroundColor: Colors.grey[200],
-          backgroundImage: imageUrl != null && imageUrl.isNotEmpty ? CachedNetworkImageProvider(imageUrl) : null,
-          child: imageUrl == null || imageUrl.isEmpty ? const Icon(Icons.person, size: 40, color: Colors.grey) : null,
+          radius: 50,
+          backgroundColor: const Color(0xFF6366F1),
+          backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+              ? NetworkImage("$imageUrl?t=${DateTime.now().millisecondsSinceEpoch}")
+              : null,
+          child: imageUrl == null || imageUrl.isEmpty
+              ? const Icon(Icons.person, size: 50, color: Colors.white)
+              : null,
         ),
-        _buildStatItem(_userPosts.length.toString(), l10n.posts),
-        _buildStatItem((_currentUser!.get<int>('points') ?? 0).toString(), 'Impact'),
-        _buildStatItem((_currentUser!.get<int>('level') ?? 1).toString(), 'Level'),
-      ],
-    );
-  }
-
-  Widget _buildStatItem(String count, String label) {
-    return Column(
-      children: [
-        Text(count, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        Text(label, style: const TextStyle(fontSize: 13, color: Colors.black87)),
-      ],
-    );
-  }
-
-  Widget _buildProfileBio() {
-    final String fullName = _currentUser!.get<String>('fullName') ?? 'User';
-    final String location = _currentUser!.get<String>('location') ?? 'Earth';
-    final List<dynamic> interests = _currentUser!.get<List<dynamic>>('interests') ?? [];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        const Text('Community Leader', style: TextStyle(color: Colors.grey, fontSize: 13)), // Placeholder category
-        Text('📍 Traveling from $location', style: const TextStyle(fontSize: 13)),
+        const SizedBox(height: 16),
+        Text(fullName, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
         const SizedBox(height: 4),
-        Wrap(
-          spacing: 4,
-          children: interests.map((i) => Text('#$i', style: const TextStyle(color: Color(0xFF00376B), fontSize: 13))).toList(),
+        Text(l10n.points_and_level(points, level), style: const TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.w500)),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildStatItem(_userPosts.length.toString(), l10n.posts, () {
+              _tabController.animateTo(0);
+            }),
+            Container(width: 1, height: 24, color: Theme.of(context).dividerColor, margin: const EdgeInsets.symmetric(horizontal: 24)),
+            _buildStatItem(_userFriends.length.toString(), l10n.friends, _isMe ? () {
+              _tabController.animateTo(1);
+            } : null),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildActionButtons(AppLocalizations l10n) {
-    return Row(
-      children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: _navigateToEdit,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
-              alignment: Alignment.center,
-              child: Text(l10n.edit_profile, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-            ),
-          ),
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
-            alignment: Alignment.center,
-            child: const Text('Share Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-          ),
-        ),
-        const SizedBox(width: 6),
-        Container(
-          padding: const EdgeInsets.all(7),
-          decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
-          child: const Icon(Icons.person_add_outlined, size: 18),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoTab(AppLocalizations l10n) {
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+  Widget _buildStatItem(String count, String label, VoidCallback? onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildProfileItem(Icons.email_outlined, l10n.email, _currentUser!.emailAddress ?? 'No email'),
-          _buildProfileItem(Icons.phone_outlined, l10n.phone, _currentUser!.get<String>('phone') ?? 'No phone'),
-          _buildProfileItem(Icons.location_on_outlined, l10n.location, _currentUser!.get<String>('location') ?? 'No location'),
-          const SizedBox(height: 24),
-          Text(l10n.interests, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          _buildInterests(_currentUser!, l10n),
-          const SizedBox(height: 32),
+          Text(count, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
         ],
       ),
-    );
-  }
-
-  Widget _buildProfileItem(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: const Color(0xFF6366F1), size: 24),
-          ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
-              Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInterests(ParseUser user, AppLocalizations l10n) {
-    final List<dynamic> interests = user.get<List<dynamic>>('interests') ?? [];
-    if (interests.isEmpty) return Text(l10n.no_interests_specified, style: const TextStyle(color: Colors.grey));
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: interests.map((interest) {
-        final String interestStr = interest.toString();
-        final String label = () {
-          switch (interestStr) {
-            case 'Music': return l10n.music;
-            case 'Environment': return l10n.environment;
-            case 'Art': return l10n.art;
-            case 'Education': return l10n.education;
-            case 'Community': return l10n.community;
-            case 'Volunteering': return l10n.volunteering;
-            case 'Animal Care': return l10n.animal_care;
-            default: return interestStr;
-          }
-        }();
-        
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF3F4F6),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
-          ),
-          child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF374151))),
-        );
-      }).toList(),
     );
   }
 
@@ -350,7 +208,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           children: [
             const Icon(Icons.camera_alt_outlined, size: 64, color: Colors.black54),
             const SizedBox(height: 12),
-            Text(l10n.no_events_added, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+            Text(l10n.no_events_added, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -373,10 +231,63 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         if (file is ParseFileBase) imageUrl = file.url;
 
         return Container(
-          color: Colors.grey[100],
+          color: Theme.of(context).cardColor,
           child: imageUrl != null && imageUrl.isNotEmpty
               ? CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.cover)
-              : const Center(child: Icon(Icons.article_outlined, color: Colors.grey)),
+              : Center(child: Icon(Icons.article_outlined, color: Theme.of(context).hintColor)),
+        );
+      },
+    );
+  }
+
+  Widget _buildFriendsTab(AppLocalizations l10n) {
+    if (_userFriends.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.people_outline, size: 64, color: Theme.of(context).hintColor.withOpacity(0.2)),
+            const SizedBox(height: 12),
+            Text(_isMe ? "You haven't added any friends" : "No friends to show", 
+              style: TextStyle(fontSize: 16, color: Theme.of(context).hintColor)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(16),
+      itemCount: _userFriends.length,
+      itemBuilder: (context, index) {
+        final friend = _userFriends[index];
+        final String name = friend.get<String>('fullName') ?? friend.username ?? 'User';
+        final dynamic pic = friend.get('profilePicture');
+        String? picUrl;
+        if (pic is ParseFileBase) picUrl = pic.url;
+
+        return Card(
+          elevation: 0,
+          margin: const EdgeInsets.only(bottom: 8),
+          color: Theme.of(context).cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.5)),
+          ),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundImage: picUrl != null ? CachedNetworkImageProvider(picUrl) : null,
+              child: picUrl == null ? const Icon(Icons.person) : null,
+            ),
+            title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('@${friend.username}', style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfileScreen(userId: friend.objectId)),
+              );
+            },
+          ),
         );
       },
     );
@@ -401,7 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   }
 }
 
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   _SliverAppBarDelegate(this._tabBar);
   final TabBar _tabBar;
   @override
@@ -410,7 +321,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => _tabBar.preferredSize.height;
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(color: Colors.white, child: _tabBar);
+    return Container(color: Theme.of(context).cardColor, child: _tabBar);
   }
   @override
   bool shouldRebuild(_SliverAppBarDelegate oldDelegate) => false;

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/providers/event_provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../l10n/app_localizations.dart';
+import 'event_award_approval_screen.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final String eventId;
@@ -19,6 +20,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   bool _isLoading = true;
   bool _isActionLoading = false;
   ParseUser? _currentUser;
+  bool _isAwardPending = false;
 
   @override
   void initState() {
@@ -38,6 +40,16 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       final response = await query.query();
       if (response.success && response.results != null && response.results!.isNotEmpty) {
         _event = response.results!.first as ParseObject;
+        
+        // Check if user already finished but pending award
+        if (_currentUser != null) {
+          final joinQuery = QueryBuilder<ParseObject>(ParseObject('EventParticipants'))
+            ..whereEqualTo('event', _event)
+            ..whereEqualTo('user', _currentUser)
+            ..whereEqualTo('status', 'award_pending');
+          final joinResp = await joinQuery.query();
+          _isAwardPending = joinResp.success && joinResp.results != null && joinResp.results!.isNotEmpty;
+        }
       }
     } catch (e) {
       debugPrint("Error loading event: $e");
@@ -57,6 +69,30 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.joined_successfully), backgroundColor: Colors.green),
       );
+    }
+  }
+
+  void _onFinishEvent() async {
+    if (_event == null || _currentUser == null) return;
+    setState(() => _isActionLoading = true);
+    
+    try {
+      final query = QueryBuilder<ParseObject>(ParseObject('EventParticipants'))
+        ..whereEqualTo('event', _event)
+        ..whereEqualTo('user', _currentUser);
+      
+      final resp = await query.query();
+      if (resp.success && resp.results != null && resp.results!.isNotEmpty) {
+        final participant = resp.results!.first as ParseObject;
+        participant.set('status', 'award_pending');
+        await participant.save();
+        setState(() {
+          _isAwardPending = true;
+          _isActionLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() => _isActionLoading = false);
     }
   }
 
@@ -85,6 +121,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     
     final isOwner = creator?.objectId == _currentUser?.objectId;
     final isJoined = eventProvider.isUserJoined(_event!.objectId);
+    final isOver = dateObj != null && dateObj.isBefore(DateTime.now());
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -93,6 +130,19 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          if (isOwner)
+            TextButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => EventAwardApprovalScreen(event: _event!)),
+                );
+              },
+              icon: const Icon(Icons.check_circle_outline, color: Color(0xFF6366F1)),
+              label: const Text('Approvals', style: TextStyle(color: Color(0xFF6366F1))),
+            )
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -160,17 +210,17 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: (isOwner || isJoined || _isActionLoading) ? null : () => _onJoinEvent(l10n),
+            onPressed: (isOwner || _isAwardPending || _isActionLoading || (isOver && !isJoined)) ? null : (isJoined ? _onFinishEvent : () => _onJoinEvent(l10n)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: (isOwner || isJoined) ? Theme.of(context).dividerColor : const Color(0xFF6366F1),
-              foregroundColor: (isOwner || isJoined) ? Theme.of(context).colorScheme.onSurface.withOpacity(0.5) : Colors.white,
+              backgroundColor: (isOwner || _isAwardPending || (isOver && !isJoined)) ? Theme.of(context).dividerColor : const Color(0xFF6366F1),
+              foregroundColor: (isOwner || _isAwardPending || (isOver && !isJoined)) ? Theme.of(context).colorScheme.onSurface.withOpacity(0.5) : Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               elevation: 0,
             ),
             child: _isActionLoading 
               ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
               : Text(
-                  isOwner ? l10n.your_event : (isJoined ? l10n.joined : l10n.join_event),
+                  isOwner ? l10n.your_event : (_isAwardPending ? 'Award Pending' : (isJoined ? 'Mark as Done' : (isOver ? 'Event Over' : l10n.join_event))),
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
                 ),
           ),

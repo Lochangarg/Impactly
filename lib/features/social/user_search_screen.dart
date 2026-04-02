@@ -191,6 +191,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                                         Text('@$username', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 14)),
                                       ],
                                     ),
+
                                   ),
                                 ),
                                 IconButton(
