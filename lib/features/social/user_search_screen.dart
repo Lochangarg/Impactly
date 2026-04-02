@@ -187,13 +187,8 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-<<<<<<< HEAD
-                                        Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                        Text('@$username', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-=======
                                         Text(fullName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
                                         Text('@$username', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 14)),
->>>>>>> 8c21739 (updates : dark mode, fixing post cards, adding friends page, making notificational panel working)
                                       ],
                                     ),
                                   ),

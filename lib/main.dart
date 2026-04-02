@@ -13,6 +13,8 @@ import 'core/theme/app_theme.dart';
 import 'routes/app_routes.dart';
 import 'features/language/screens/language_selection_screen.dart';
 import 'core/providers/theme_provider.dart';
+import 'core/services/update_service.dart';
+import 'features/update/widgets/update_dialog.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,10 +56,27 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    _checkForUpdates();
     if (widget.isLoggedIn) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.read<EventProvider>().loadJoinedEvents();
       });
+    }
+  }
+
+  Future<void> _checkForUpdates() async {
+    // Replace with your real hosted JSON URL
+    const updateUrl = 'https://raw.githubusercontent.com/username/repo/main/update_config.json';
+    final updateService = UpdateService(updateConfigUrl: updateUrl);
+    
+    final updateData = await updateService.checkForUpdate();
+    
+    if (updateData != null && mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: !updateData.forceUpdate,
+        builder: (context) => UpdateDialog(updateModel: updateData),
+      );
     }
   }
 
