@@ -12,6 +12,13 @@
     <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase"/>
     <img src="https://img.shields.io/badge/Provider-7952B3?style=for-the-badge" alt="Provider"/>
     <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License"/>
+    <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=for-the-badge" alt="Version"/>
+  </p>
+  <p align="center">
+    <img src="https://img.shields.io/badge/Android-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android"/>
+    <img src="https://img.shields.io/badge/iOS-000000?style=flat-square&logo=ios&logoColor=white" alt="iOS"/>
+    <img src="https://img.shields.io/badge/Web-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Web"/>
+    <img src="https://img.shields.io/badge/Windows-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Windows"/>
   </p>
 </p>
 
@@ -30,7 +37,7 @@ Despite growing awareness of social responsibility among youth, a significant di
 | **Parikshit Kurel** | PU02424EUG10010 | Project Lead & Full-Stack Developer | Architecture design, Flutter development, Supabase integration, state management, deployment |
 | **Lochan Garg** | PU02424EUG10018 | UI/UX Designer & Frontend Developer | Wireframing (Miro), visual design, user research, screen implementation, usability testing |
 
-> **Module:** BCS4601 — Design Project (Mobile Application) · Avantika University · 2025–2026
+> **Collaborative Note:** Both team members worked closely across all phases of the project — from research and design to development, testing, and documentation. While roles above reflect primary ownership areas, all code, design decisions, and documentation were produced through pair programming and collaborative review.
 
 ---
 
