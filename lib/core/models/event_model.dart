@@ -28,4 +28,16 @@ class EventModel {
       category: object.get<String>('category') ?? 'General',
     );
   }
+
+  factory EventModel.fromMap(Map<String, dynamic> map) {
+    return EventModel(
+      id: map['id'].toString(),
+      title: map['title'] ?? 'Untitled',
+      description: map['description'] ?? '',
+      location: map['location'] ?? 'No location',
+      date: DateTime.parse(map['date'] ?? DateTime.now().toIso8601String()),
+      points: map['points'] ?? 0,
+      category: map['category'] ?? 'General',
+    );
+  }
 }

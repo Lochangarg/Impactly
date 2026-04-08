@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_stats.dart';
 import '../utils/level_utils.dart';
+import 'supabase_service.dart';
 
 class ImpactService {
   // Anti-cheat constants
@@ -13,18 +14,24 @@ class ImpactService {
   static const int xpStreakBonus = 50;
   static const int xpPerTask = 100;
 
+  static final client = Supabase.instance.client;
+
   static Future<bool> awardXp({required String action, int? customAmount}) async {
-    final user = await ParseUser.currentUser() as ParseUser?;
+    final user = client.auth.currentUser;
     if (user == null) return false;
-    return awardXpToUser(user, action: action, customAmount: customAmount);
+    return awardXpToUser(user.id, action: action, customAmount: customAmount);
   }
 
-  static Future<bool> awardXpToUser(ParseUser targetUser, {required String action, int? customAmount}) async {
+  static Future<bool> awardXpToUser(String targetUserId, {required String action, int? customAmount}) async {
     try {
+      final profile = await SupabaseService.getProfile(targetUserId);
+      if (profile == null) return false;
+
       // 1. Anti-Cheat: Daily Cap Check
       final now = DateTime.now();
-      final lastDate = targetUser.get<DateTime>('lastActionDate') ?? now;
-      int dailyXp = targetUser.get<int>('dailyXpEarned') ?? 0;
+      final lastDateStr = profile['last_action_date'];
+      final lastDate = lastDateStr != null ? DateTime.parse(lastDateStr) : now;
+      int dailyXp = profile['daily_xp_earned'] ?? 0;
 
       // If it's a new day, reset daily XP
       if (now.day != lastDate.day || now.month != lastDate.month || now.year != lastDate.year) {
@@ -34,13 +41,13 @@ class ImpactService {
       final int xpToAward = customAmount ?? _getXpForAction(action);
       
       if (dailyXp + xpToAward > dailyXpCap) {
-        debugPrint('DAILY XP CAP REACHED for user ${targetUser.objectId}');
+        debugPrint('DAILY XP CAP REACHED for user $targetUserId');
         return false;
       }
 
-      int currentXP = targetUser.get<int>('totalXP') ?? 0;
-      int recentXP = targetUser.get<int>('recentXP') ?? 0;
-      int level = targetUser.get<int>('level') ?? 1;
+      int currentXP = profile['points'] ?? 0;
+      int recentXP = profile['recent_xp'] ?? 0;
+      int level = profile['level'] ?? 1;
 
       currentXP += xpToAward;
       recentXP += xpToAward;
@@ -50,14 +57,15 @@ class ImpactService {
           level++;
       }
 
-      targetUser.set('totalXP', currentXP);
-      targetUser.set('recentXP', recentXP);
-      targetUser.set('dailyXpEarned', dailyXp);
-      targetUser.set('level', level);
-      targetUser.set('lastActionDate', now);
+      await client.from('profiles').update({
+        'points': currentXP,
+        'recent_xp': recentXP,
+        'daily_xp_earned': dailyXp,
+        'level': level,
+        'last_action_date': now.toIso8601String(),
+      }).eq('id', targetUserId);
 
-      final resp = await targetUser.save();
-      return resp.success;
+      return true;
     } catch (e) {
       debugPrint('ERROR in awardXpToUser: $e');
       return false;
@@ -75,12 +83,15 @@ class ImpactService {
   }
 
   static Future<void> applyPenalty(int amount) async {
-      final user = await ParseUser.currentUser() as ParseUser?;
+      final user = client.auth.currentUser;
       if (user == null) return;
       
-      int currentXP = user.get<int>('totalXP') ?? 0;
+      final profile = await SupabaseService.getProfile(user.id);
+      if (profile == null) return;
+
+      int currentXP = profile['points'] ?? 0;
       currentXP = (currentXP - amount).clamp(0, 9999999);
-      user.set('totalXP', currentXP);
-      await user.save();
+      
+      await client.from('profiles').update({'points': currentXP}).eq('id', user.id);
   }
 }

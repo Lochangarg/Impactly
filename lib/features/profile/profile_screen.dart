@@ -1,56 +1,56 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../core/services/parse_service.dart';
+import '../../core/services/supabase_service.dart';
 import 'edit_profile_screen.dart';
 import '../language/screens/language_selection_screen.dart';
 import '../../l10n/app_localizations.dart';
 import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final String? userId;
+  const ProfileScreen({super.key, this.userId});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
-  final String? _targetUserId;
-  ParseUser? _currentUser;
+  Map<String, dynamic>? _currentUser;
   bool _isLoading = true;
-  List<ParseObject> _userPosts = [];
-  List<ParseUser> _userFriends = [];
+  List<Map<String, dynamic>> _userPosts = [];
+  List<Map<String, dynamic>> _userFriends = [];
   late TabController _tabController;
   bool _isMe = true;
-
-  _ProfileScreenState(this._targetUserId);
 
   @override
   void initState() {
     super.initState();
-    _isMe = _targetUserId == null;
+    _isMe = widget.userId == null;
     _tabController = TabController(length: _isMe ? 2 : 1, vsync: this);
     _loadAllData();
   }
 
   Future<void> _loadAllData() async {
-    setState(() => _isLoading = true);
+    if (mounted) setState(() => _isLoading = true);
     try {
-      ParseUser? user;
+      final me = Supabase.instance.client.auth.currentUser;
+      Map<String, dynamic>? user;
+      
       if (_isMe) {
-        user = await ParseUser.currentUser() as ParseUser?;
-        if (user != null) await user.fetch();
+        if (me != null) {
+          user = await SupabaseService.fetchUserDetails(me.id);
+        }
       } else {
-        user = await ParseService.fetchUserDetails(_targetUserId!);
-        final me = await ParseUser.currentUser() as ParseUser?;
-        if (user?.objectId == me?.objectId) {
+        user = await SupabaseService.fetchUserDetails(widget.userId!);
+        if (user?['id'] == me?.id) {
           _isMe = true;
         }
       }
 
       if (user != null) {
-        final posts = await ParseService.fetchUserPosts(user);
-        final friends = await ParseService.getFriends(user: user);
+        final posts = await SupabaseService.fetchUserPosts(user['id']);
+        final friends = await SupabaseService.getFriends(userId: user['id']);
         if (mounted) {
           setState(() {
             _currentUser = user;
@@ -140,18 +140,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     );
   }
 
-  Widget _buildProfileHeader(ParseUser user) {
-    final String fullName = user.get<String>('fullName') ?? 'User';
-    final dynamic file = user.get('profilePicture');
-    String? imageUrl;
-    if (file is ParseFileBase) {
-      imageUrl = file.url;
-    } else if (file is String) {
-      imageUrl = file;
-    }
-
-    final int points = user.get<int>('totalXP') ?? 0;
-    final int level = user.get<int>('level') ?? 1;
+  Widget _buildProfileHeader(Map<String, dynamic> user) {
+    final String fullName = user['full_name'] ?? 'User';
+    final String? imageUrl = user['profile_picture'];
+    final int points = user['points'] ?? 0;
+    final int level = user['level'] ?? 1;
     final l10n = AppLocalizations.of(context)!;
 
     return Column(
@@ -160,7 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           radius: 50,
           backgroundColor: const Color(0xFF6366F1),
           backgroundImage: imageUrl != null && imageUrl.isNotEmpty
-              ? NetworkImage("$imageUrl?t=${DateTime.now().millisecondsSinceEpoch}")
+              ? CachedNetworkImageProvider(imageUrl)
               : null,
           child: imageUrl == null || imageUrl.isEmpty
               ? const Icon(Icons.person, size: 50, color: Colors.white)
@@ -226,9 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       itemCount: _userPosts.length,
       itemBuilder: (context, index) {
         final post = _userPosts[index];
-        final dynamic file = post.get('image');
-        String? imageUrl;
-        if (file is ParseFileBase) imageUrl = file.url;
+        final String? imageUrl = post['image_url'];
 
         return Container(
           color: Theme.of(context).cardColor,
@@ -261,10 +252,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       itemCount: _userFriends.length,
       itemBuilder: (context, index) {
         final friend = _userFriends[index];
-        final String name = friend.get<String>('fullName') ?? friend.username ?? 'User';
-        final dynamic pic = friend.get('profilePicture');
-        String? picUrl;
-        if (pic is ParseFileBase) picUrl = pic.url;
+        final String name = friend['full_name'] ?? friend['username'] ?? 'User';
+        final String? picUrl = friend['profile_picture'];
 
         return Card(
           elevation: 0,
@@ -280,11 +269,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               child: picUrl == null ? const Icon(Icons.person) : null,
             ),
             title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('@${friend.username}', style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
+            subtitle: Text('@${friend['username'] ?? ''}', style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ProfileScreen(userId: friend.objectId)),
+                MaterialPageRoute(builder: (context) => ProfileScreen(userId: friend['id'].toString())),
               );
             },
           ),
@@ -297,15 +286,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => EditProfileScreen(initialData: {
-        'fullName': _currentUser!.get<String>('fullName'),
-        'username': _currentUser!.username,
-        'phone': _currentUser!.get<String>('phone'),
-        'location': _currentUser!.get<String>('location'),
-        'interests': _currentUser!.get<List<dynamic>>('interests'),
-        'profilePicUrl': () {
-          final dynamic f = _currentUser!.get('profilePicture');
-          return f is ParseFileBase ? f.url : (f is String ? f : null);
-        }(),
+        'fullName': _currentUser!['full_name'],
+        'username': _currentUser!['username'],
+        'phone': _currentUser!['phone'],
+        'location': _currentUser!['city'],
+        'interests': _currentUser!['interests'],
+        'profilePicUrl': _currentUser!['profile_picture'],
       })),
     );
     if (result == true) _loadAllData();

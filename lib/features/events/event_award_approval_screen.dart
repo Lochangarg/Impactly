@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
-import '../../core/services/parse_service.dart';
+import '../../core/services/supabase_service.dart';
 
 class EventAwardApprovalScreen extends StatefulWidget {
-  final ParseObject event;
+  final Map<String, dynamic> event;
   const EventAwardApprovalScreen({super.key, required this.event});
 
   @override
@@ -11,7 +10,7 @@ class EventAwardApprovalScreen extends StatefulWidget {
 }
 
 class _EventAwardApprovalScreenState extends State<EventAwardApprovalScreen> {
-  List<ParseObject> _pendingAwards = [];
+  List<Map<String, dynamic>> _pendingAwards = [];
   bool _isLoading = true;
 
   @override
@@ -21,7 +20,7 @@ class _EventAwardApprovalScreenState extends State<EventAwardApprovalScreen> {
   }
 
   Future<void> _loadPendingAwards() async {
-    final results = await ParseService.fetchPendingAwardsForEvent(widget.event.objectId!);
+    final results = await SupabaseService.fetchPendingAwardsForEvent(widget.event['id'].toString());
     if (mounted) {
       setState(() {
         _pendingAwards = results;
@@ -30,13 +29,16 @@ class _EventAwardApprovalScreenState extends State<EventAwardApprovalScreen> {
     }
   }
 
-  Future<void> _processAward(ParseObject userEvent, bool approve) async {
+  Future<void> _processAward(Map<String, dynamic> award, bool approve) async {
     bool success;
+    final userEventId = award['id'].toString();
+    final userId = award['user_id'].toString();
+    final points = (widget.event['points'] ?? 200).toInt();
+
     if (approve) {
-       // Default XP for event completion
-       success = await ParseService.approveAward(userEvent, 200);
+       success = await SupabaseService.approveAward(userEventId, userId, points);
     } else {
-       success = await ParseService.rejectAward(userEvent);
+       success = await SupabaseService.rejectAward(userEventId);
     }
 
     if (success && mounted) {
@@ -51,7 +53,7 @@ class _EventAwardApprovalScreenState extends State<EventAwardApprovalScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Approve Awards: ${widget.event.get('title')}'),
+        title: Text('Approve Awards: ${widget.event['title']}'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -62,14 +64,14 @@ class _EventAwardApprovalScreenState extends State<EventAwardApprovalScreen> {
                   itemCount: _pendingAwards.length,
                   itemBuilder: (context, index) {
                     final award = _pendingAwards[index];
-                    final user = award.get<ParseUser>('user');
+                    final profile = award['profiles'];
                     
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       child: ListTile(
                         leading: const CircleAvatar(child: Icon(Icons.person)),
-                        title: Text(user?.get<String>('fullName') ?? 'Unknown User'),
-                        subtitle: Text('Completed on: ${award.get<DateTime>('completedAt')?.toLocal().toString().split('.')[0]}'),
+                        title: Text(profile?['full_name'] ?? 'Unknown User'),
+                        subtitle: Text('Joined on: ${award['created_at'] != null ? award['created_at'].toString().split('T')[0] : 'Unknown'}'),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

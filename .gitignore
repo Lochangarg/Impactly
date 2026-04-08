@@ -27,11 +27,19 @@ migrate_working_dir/
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
+.packages
 .pub-cache/
 .pub/
 /build/
 /coverage/
+pubspec.lock
+
+# Generated platform plugin registrants
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugins.cmake
+macos/Flutter/GeneratedPluginRegistrant.swift
 
 # Symbolication related
 app.*.symbols
@@ -55,4 +63,28 @@ app.*.map.json
 # Android signing
 *.jks
 *.keystore
-key.properties
+key.properties
+
+# Build logs & temporary outputs
+build_output.txt
+
+# Project metadata (Flutter auto-generated)
+.metadata
+
+# Rubric-required exclusions
+.gradle/
+node_modules/
+
+# Ignore academic reports and scripts within /docs
+docs/*.docx
+docs/*.py
+docs/Impactly_Project_Report.md
+docs/BCS4601*.pdf
+
+# Keep mandatory design assets and technical docs
+!docs/MiroDesign application.pdf
+!docs/DATABASE.md
+!docs/SUPABASE_MIGRATION_PLAN.md
+!docs/MESSAGING_SCHEMA_FIX.sql
+!docs/Commands I Runned On Supabase SQL CLI.md
+

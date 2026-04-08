@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/event_provider.dart';
-import '../../core/constants/app_constants.dart';
+import '../../core/services/supabase_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'event_award_approval_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/services/translation_service.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final String eventId;
@@ -16,11 +18,12 @@ class EventDetailsScreen extends StatefulWidget {
 }
 
 class _EventDetailsScreenState extends State<EventDetailsScreen> {
-  ParseObject? _event;
+  Map<String, dynamic>? _event;
   bool _isLoading = true;
   bool _isActionLoading = false;
-  ParseUser? _currentUser;
+  User? _currentUser;
   bool _isAwardPending = false;
+  bool _autoTranslate = false;
 
   @override
   void initState() {
@@ -31,24 +34,29 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      _currentUser = await ParseUser.currentUser() as ParseUser?;
+      _currentUser = Supabase.instance.client.auth.currentUser;
       
-      final query = QueryBuilder<ParseObject>(ParseObject('Events'))
-        ..whereEqualTo('objectId', widget.eventId)
-        ..includeObject(['createdBy']);
+      final response = await Supabase.instance.client
+          .from('events')
+          .select('*, profiles:created_by(*)')
+          .eq('id', widget.eventId)
+          .single();
       
-      final response = await query.query();
-      if (response.success && response.results != null && response.results!.isNotEmpty) {
-        _event = response.results!.first as ParseObject;
+      if (response != null) {
+        _event = response;
         
         // Check if user already finished but pending award
         if (_currentUser != null) {
-          final joinQuery = QueryBuilder<ParseObject>(ParseObject('EventParticipants'))
-            ..whereEqualTo('event', _event)
-            ..whereEqualTo('user', _currentUser)
-            ..whereEqualTo('status', 'award_pending');
-          final joinResp = await joinQuery.query();
-          _isAwardPending = joinResp.success && joinResp.results != null && joinResp.results!.isNotEmpty;
+          final joinResponse = await Supabase.instance.client
+            .from('user_events')
+            .select('status')
+            .eq('event_id', widget.eventId)
+            .eq('user_id', _currentUser!.id)
+            .maybeSingle();
+
+          if (joinResponse != null) {
+             _isAwardPending = joinResponse['status'] == 'award_pending';
+          }
         }
       }
     } catch (e) {
@@ -62,7 +70,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     if (_event == null) return;
     setState(() => _isActionLoading = true);
     
-    await context.read<EventProvider>().joinEvent(_event!);
+    final int points = _event!['points'] ?? 0;
+    await context.read<EventProvider>().joinEvent(widget.eventId, points);
     
     if (mounted) {
       setState(() => _isActionLoading = false);
@@ -77,20 +86,16 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     setState(() => _isActionLoading = true);
     
     try {
-      final query = QueryBuilder<ParseObject>(ParseObject('EventParticipants'))
-        ..whereEqualTo('event', _event)
-        ..whereEqualTo('user', _currentUser);
+      await Supabase.instance.client
+          .from('user_events')
+          .update({'status': 'award_pending'})
+          .eq('event_id', widget.eventId)
+          .eq('user_id', _currentUser!.id);
       
-      final resp = await query.query();
-      if (resp.success && resp.results != null && resp.results!.isNotEmpty) {
-        final participant = resp.results!.first as ParseObject;
-        participant.set('status', 'award_pending');
-        await participant.save();
-        setState(() {
-          _isAwardPending = true;
-          _isActionLoading = false;
-        });
-      }
+      setState(() {
+        _isAwardPending = true;
+        _isActionLoading = false;
+      });
     } catch (e) {
       setState(() => _isActionLoading = false);
     }
@@ -109,18 +114,19 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
 
     final eventProvider = context.watch<EventProvider>();
-    final title = _event!.get<String>('title') ?? l10n.untitled;
-    final description = _event!.get<String>('description') ?? '';
-    final location = _event!.get<String>('location') ?? l10n.location;
-    final points = _event!.get<int>('points') ?? 0;
-    final category = _event!.get<String>('category') ?? 'General';
-    final dateObj = _event!.get<DateTime>('date');
+    final title = _event!['title'] ?? l10n.untitled;
+    final description = _event!['description'] ?? '';
+    final location = _event!['location'] ?? l10n.location;
+    final points = _event!['points'] ?? 0;
+    final category = _event!['category'] ?? 'General';
+    final dateStrVal = _event!['date'];
+    final dateObj = dateStrVal != null ? DateTime.parse(dateStrVal) : null;
     final dateStr = dateObj != null ? DateFormat('EEEE, MMM d, yyyy • hh:mm a').format(dateObj) : l10n.no_date;
-    final creator = _event!.get<ParseObject>('createdBy');
-    final creatorName = creator?.get<String>('fullName') ?? 'Organizer';
+    final creator = _event!['profiles'];
+    final creatorName = creator?['full_name'] ?? 'Organizer';
     
-    final isOwner = creator?.objectId == _currentUser?.objectId;
-    final isJoined = eventProvider.isUserJoined(_event!.objectId);
+    final isOwner = creator?['id'] == _currentUser?.id;
+    final isJoined = eventProvider.isUserJoined(widget.eventId);
     final isOver = dateObj != null && dateObj.isBefore(DateTime.now());
 
     return Scaffold(
@@ -131,16 +137,33 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
+          IconButton(
+            icon: Icon(_autoTranslate ? Icons.translate : Icons.g_translate_outlined, 
+              color: const Color(0xFF6366F1),
+            ),
+            tooltip: 'Toggle Translation',
+            onPressed: () => setState(() => _autoTranslate = !_autoTranslate),
+          ),
           if (isOwner)
-            TextButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => EventAwardApprovalScreen(event: _event!)),
-                );
+            PopupMenuButton<String>(
+              onSelected: (val) {
+                if (val == 'approvals') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => EventAwardApprovalScreen(event: _event!)),
+                  );
+                } else if (val == 'edit') {
+                  _showEditEventDialog(context);
+                } else if (val == 'delete') {
+                  _onDeleteEvent();
+                }
               },
-              icon: const Icon(Icons.check_circle_outline, color: Color(0xFF6366F1)),
-              label: const Text('Approvals', style: TextStyle(color: Color(0xFF6366F1))),
+              itemBuilder: (context) => [
+                const PopupMenuItem(value: 'approvals', child: Text('Approvals')),
+                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+              ],
+              icon: const Icon(Icons.more_vert),
             )
         ],
       ),
@@ -148,12 +171,21 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              height: 250,
-              width: double.infinity,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              child: const Center(child: Icon(Icons.event_available, size: 80, color: Color(0xFF6366F1))),
-            ),
+            if (_event?['image_url'] != null)
+              CachedNetworkImage(
+                imageUrl: _event!['image_url'],
+                width: double.infinity,
+                height: 250,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(height: 250, color: Colors.grey[100]),
+              )
+            else
+              Container(
+                height: 250,
+                width: double.infinity,
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                child: const Center(child: Icon(Icons.event_available, size: 80, color: Color(0xFF6366F1))),
+              ),
             Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -168,7 +200,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     child: Text(category, style: const TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.bold, fontSize: 12)),
                   ),
                   const SizedBox(height: 16),
-                  Text(title, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+                  FutureBuilder<String>(
+                    future: _autoTranslate ? TranslationService.translate(title, 'hi') : Future.value(title),
+                    builder: (context, snapshot) => Text(snapshot.data ?? title, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+                  ),
                   const SizedBox(height: 24),
                   _buildInfoRow(context, Icons.calendar_month_outlined, l10n.when, dateStr),
                   const SizedBox(height: 16),
@@ -178,7 +213,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   Divider(height: 48, color: Theme.of(context).dividerColor.withOpacity(0.5), thickness: 1.5),
                   Text(l10n.about_event, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
                   const SizedBox(height: 12),
-                  Text(description, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), height: 1.6, fontSize: 15)),
+                  FutureBuilder<String>(
+                    future: _autoTranslate ? TranslationService.translate(description, 'hi') : Future.value(description),
+                    builder: (context, snapshot) => Text(snapshot.data ?? description, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), height: 1.6, fontSize: 15)),
+                  ),
                   const SizedBox(height: 32),
                   Row(
                     children: [
@@ -225,6 +263,54 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _onDeleteEvent() async {
+    final success = await SupabaseService.deleteEvent(widget.eventId);
+    if (success && mounted) {
+      Navigator.pop(context, true);
+    }
+  }
+
+  void _showEditEventDialog(BuildContext context) {
+    // Similarly to Edit Post, implement Edit Event.
+    // For now, let's just make it simple.
+    final titleController = TextEditingController(text: _event!['title']);
+    final descController = TextEditingController(text: _event!['description']);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Event'),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Title')),
+              TextField(controller: descController, decoration: const InputDecoration(labelText: 'Description'), maxLines: 3),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              final success = await SupabaseService.updateEvent(
+                eventId: widget.eventId,
+                data: {
+                  'title': titleController.text.trim(),
+                  'description': descController.text.trim(),
+                }
+              );
+              if (success && mounted) {
+                Navigator.pop(context);
+                _loadData();
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
       ),
     );
   }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../core/services/parse_service.dart';
+import '../../core/services/supabase_service.dart';
 import 'create_post_screen.dart';
 import 'post_detail_screen.dart';
 import '../social/user_search_screen.dart';
@@ -18,9 +18,9 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
-  List<ParseObject> _posts = [];
+  List<Map<String, dynamic>> _posts = [];
   bool _isLoading = true;
-  ParseUser? _currentUser;
+  User? _currentUser;
 
   @override
   void initState() {
@@ -29,31 +29,14 @@ class _FeedScreenState extends State<FeedScreen> {
   }
 
   Future<void> _fetchInitialData() async {
-    _currentUser = await ParseService.getCurrentUser();
+    _currentUser = Supabase.instance.client.auth.currentUser;
     _fetchPosts();
   }
 
   Future<void> _fetchPosts() async {
     if (mounted) setState(() => _isLoading = true);
     try {
-      final fetchedPosts = await ParseService.fetchFeedPosts();
-      
-      final locale = Localizations.maybeLocaleOf(context)?.toString() ?? 'en';
-      if (locale == 'hi') {
-        for (var post in fetchedPosts) {
-          final content = post.get<String>('content') ?? '';
-          final translatedContent = await TranslationService.translate(content, 'hi');
-          post.set('content', translatedContent);
-
-          final event = post.get<ParseObject>('event');
-          if (event != null) {
-            final title = event.get<String>('title') ?? '';
-            final translatedTitle = await TranslationService.translate(title, 'hi');
-            event.set('title', translatedTitle);
-          }
-        }
-      }
-
+      final fetchedPosts = await SupabaseService.fetchFeedPosts();
       if (mounted) {
         setState(() {
           _posts = fetchedPosts;
@@ -67,27 +50,25 @@ class _FeedScreenState extends State<FeedScreen> {
     }
   }
 
+  bool _manualTranslate = false;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(l10n.community_feed, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827), fontSize: 22, letterSpacing: -1)),
-        backgroundColor: Colors.white,
+        title: Text(l10n.community_feed, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22, letterSpacing: -1)),
         elevation: 0,
         centerTitle: false,
         actions: [
-          IconButton(icon: const Icon(Icons.notifications_none_outlined, color: Colors.black), onPressed: () {}),
           IconButton(
-            icon: const Icon(Icons.search_outlined, color: Colors.black),
+            icon: const Icon(Icons.search_outlined),
             onPressed: () {
               MainScreen.of(context)?.setTab(1);
             },
           ),
-          IconButton(icon: const Icon(Icons.favorite_border, color: Colors.black), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.send_outlined, color: Colors.black), onPressed: () {}),
         ],
       ),
       body: _isLoading
@@ -104,6 +85,8 @@ class _FeedScreenState extends State<FeedScreen> {
                       itemBuilder: (context, index) => PostCard(
                         post: _posts[index],
                         currentUser: _currentUser,
+                        autoTranslate: _manualTranslate,
+                        onUpdate: _fetchPosts,
                       ),
                     ),
             ),
@@ -127,8 +110,8 @@ class _FeedScreenState extends State<FeedScreen> {
           children: [
             const Icon(Icons.photo_library_outlined, size: 80, color: Colors.grey),
             const SizedBox(height: 16),
-            Text(l10n.no_posts_yet, style: const TextStyle(fontSize: 18, color: Colors.black, fontWeight: FontWeight.bold)),
-            Text(l10n.be_the_first_to_share, style: TextStyle(color: Colors.grey[600])),
+            Text(l10n.no_posts_yet, style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold)),
+            Text(l10n.be_the_first_to_share, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
           ],
         ),
       ),
@@ -137,10 +120,12 @@ class _FeedScreenState extends State<FeedScreen> {
 }
 
 class PostCard extends StatefulWidget {
-  final ParseObject post;
-  final ParseUser? currentUser;
+  final Map<String, dynamic> post;
+  final User? currentUser;
+  final bool autoTranslate;
+  final VoidCallback onUpdate;
 
-  const PostCard({super.key, required this.post, this.currentUser});
+  const PostCard({super.key, required this.post, this.currentUser, this.autoTranslate = false, required this.onUpdate});
 
   @override
   State<PostCard> createState() => _PostCardState();
@@ -153,9 +138,9 @@ class _PostCardState extends State<PostCard> {
   @override
   void initState() {
     super.initState();
-    final likes = widget.post.get<List<dynamic>>('likes') ?? [];
+    final likes = widget.post['likes'] as List<dynamic>? ?? [];
     _likesCount = likes.length;
-    _isLiked = likes.contains(widget.currentUser?.objectId);
+    _isLiked = widget.currentUser != null && likes.contains(widget.currentUser!.id);
   }
 
   void _handleLike() async {
@@ -169,7 +154,7 @@ class _PostCardState extends State<PostCard> {
       }
     });
 
-    final success = await ParseService.toggleLike(widget.post);
+    final success = await SupabaseService.toggleLike(widget.post['id'].toString());
     if (!success && mounted) {
       // Revert if failed
       setState(() {
@@ -181,23 +166,23 @@ class _PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
-    // 👤 User data
-    final ParseObject? rawUser = (widget.post.get('createdBy') ?? widget.post.get('user')) as ParseObject?;
-    final String userName = rawUser?.get<String>('fullName') ?? rawUser?.get<String>('username') ?? "User";
-    final dynamic profilePicRaw = rawUser?.get('profilePicture');
-    final String? avatarUrl = profilePicRaw is ParseFileBase ? profilePicRaw.url : (profilePicRaw is String ? profilePicRaw : null);
+    // 👤 User data (joined from profiles table)
+    final userProfile = widget.post['profiles'];
+    final String userName = userProfile?['full_name'] ?? userProfile?['username'] ?? "User";
+    final String? avatarUrl = userProfile?['profile_picture'];
     
     // 📅 Content
-    final date = widget.post.createdAt;
-    final timeStr = date != null ? DateFormat('MMMM d').format(date) : 'Recently';
-    final imageUrl = widget.post.get<ParseFile>('image')?.url;
-    final content = widget.post.get<String>('content') ?? '';
-    final event = widget.post.get<ParseObject>('event');
-    final String eventTitle = event?.get<String>('title') ?? '';
+    final createdAtStr = widget.post['created_at'];
+    final date = createdAtStr != null ? DateTime.parse(createdAtStr) : DateTime.now();
+    final timeStr = DateFormat('MMMM d').format(date);
+    final imageUrl = widget.post['image_url'];
+    final content = widget.post['content'] ?? '';
+    final event = widget.post['events'];
+    final String eventTitle = event?['title'] ?? '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -218,11 +203,29 @@ class _PostCardState extends State<PostCard> {
                   children: [
                     Text(userName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
                     if (eventTitle.isNotEmpty)
-                      Text(eventTitle, style: const TextStyle(fontSize: 11, color: Colors.black87)),
+                      Text(eventTitle, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7))),
                   ],
                 ),
                 const Spacer(),
-                const Icon(Icons.more_horiz, size: 20),
+                if (widget.currentUser?.id == widget.post['created_by'])
+                  PopupMenuButton<String>(
+                    onSelected: (val) async {
+                      if (val == 'delete') {
+                        final success = await SupabaseService.deletePost(widget.post['id'].toString());
+                        if (success) widget.onUpdate();
+                      } else if (val == 'edit') {
+                        // Implement edit logic if needed, or simple dialog
+                        _showEditDialog(context);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                      const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+                    ],
+                    icon: const Icon(Icons.more_horiz, size: 20),
+                  )
+                else
+                  const Icon(Icons.more_horiz, size: 20),
               ],
             ),
           ),
@@ -240,20 +243,20 @@ class _PostCardState extends State<PostCard> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 30),
               width: double.infinity,
               decoration: BoxDecoration(gradient: LinearGradient(colors: [const Color(0xFF6366F1), const Color(0xFF818CF8).withOpacity(0.8)], begin: Alignment.topLeft, end: Alignment.bottomRight)),
-              child: Text(content, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              child: FutureBuilder<String>(
+                future: widget.autoTranslate ? TranslationService.translate(content, 'hi') : Future.value(content),
+                builder: (context, snapshot) => Text(snapshot.data ?? content, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              ),
             ),
 
-          // Action Bar
+          // Action Bar (Non-functional likes removed as requested, keeping comments)
+          // Wait, user said remove "Notification, Likes, and Share Button Is Not Functional, Remove Them!"
+          // These were in the feed header and post card action bar.
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Row(
               children: [
-                IconButton(
-                  icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border, color: _isLiked ? Colors.red : Colors.black, size: 28),
-                  onPressed: _handleLike,
-                ),
                 IconButton(icon: const Icon(Icons.mode_comment_outlined, size: 26), onPressed: () => _showComments(context)),
-                IconButton(icon: const Icon(Icons.send_outlined, size: 26), onPressed: () {}),
                 const Spacer(),
                 IconButton(icon: const Icon(Icons.bookmark_border, size: 28), onPressed: () {}),
               ],
@@ -271,14 +274,20 @@ class _PostCardState extends State<PostCard> {
           if (imageUrl != null && content.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-              child: RichText(
-                text: TextSpan(
-                  style: const TextStyle(color: Colors.black, fontSize: 13.5),
-                  children: [
-                    TextSpan(text: '$userName ', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    TextSpan(text: content),
-                  ],
-                ),
+              child: FutureBuilder<String>(
+                future: widget.autoTranslate ? TranslationService.translate(content, 'hi') : Future.value(content),
+                builder: (context, snapshot) {
+                  final translatedContent = snapshot.data ?? content;
+                  return RichText(
+                    text: TextSpan(
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13.5),
+                      children: [
+                        TextSpan(text: '$userName ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(text: translatedContent),
+                      ],
+                    ),
+                  );
+                }
               ),
             ),
 
@@ -302,18 +311,49 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
+  void _showEditDialog(BuildContext context) {
+    final controller = TextEditingController(text: widget.post['content']);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Post'),
+        content: TextField(
+          controller: controller,
+          maxLines: 4,
+          decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Enter new content'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              final success = await SupabaseService.updatePost(
+                postId: widget.post['id'].toString(),
+                content: controller.text.trim(),
+              );
+              if (success && mounted) {
+                Navigator.pop(context);
+                widget.onUpdate();
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showComments(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.9,
         maxChildSize: 0.9,
         minChildSize: 0.5,
         expand: false,
-        builder: (_, controller) => _CommentSheet(postId: widget.post.objectId!, scrollController: controller),
+        builder: (_, controller) => _CommentSheet(postId: widget.post['id'].toString(), scrollController: controller),
       ),
     );
   }
@@ -330,7 +370,7 @@ class _CommentSheet extends StatefulWidget {
 
 class _CommentSheetState extends State<_CommentSheet> {
   final TextEditingController _commentController = TextEditingController();
-  List<ParseObject> _comments = [];
+  List<Map<String, dynamic>> _comments = [];
   bool _isLoading = true;
 
   @override
@@ -340,7 +380,7 @@ class _CommentSheetState extends State<_CommentSheet> {
   }
 
   Future<void> _fetchComments() async {
-    final comments = await ParseService.fetchComments(widget.postId);
+    final comments = await SupabaseService.fetchComments(widget.postId);
     if (mounted) setState(() { _comments = comments; _isLoading = false; });
   }
 
@@ -349,7 +389,7 @@ class _CommentSheetState extends State<_CommentSheet> {
     if (text.isEmpty) return;
     
     _commentController.clear();
-    final success = await ParseService.addComment(widget.postId, text);
+    final success = await SupabaseService.addComment(widget.postId, text);
     if (success) _fetchComments();
   }
 
@@ -370,12 +410,12 @@ class _CommentSheetState extends State<_CommentSheet> {
                   itemCount: _comments.length,
                   itemBuilder: (context, index) {
                     final comment = _comments[index];
-                    final user = comment.get<ParseObject>('user');
-                    final String name = user?.get<String>('fullName') ?? user?.get<String>('username') ?? 'User';
+                    final user = comment['profiles'];
+                    final String name = user?['full_name'] ?? user?['username'] ?? 'User';
                     return ListTile(
                       leading: const CircleAvatar(radius: 14, child: Icon(Icons.person, size: 16)),
                       title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                      subtitle: Text(comment.get<String>('text') ?? '', style: const TextStyle(color: Colors.black, fontSize: 13)),
+                      subtitle: Text(comment['text'] ?? '', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
                     );
                   },
                 ),
@@ -390,6 +430,7 @@ class _CommentSheetState extends State<_CommentSheet> {
                 child: TextField(
                   controller: _commentController,
                   decoration: const InputDecoration(hintText: 'Add a comment...', border: InputBorder.none, hintStyle: TextStyle(fontSize: 14)),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 ),
               ),
               TextButton(onPressed: _submitComment, child: const Text('Post', style: TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.bold))),

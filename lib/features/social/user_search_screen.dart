@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../core/services/parse_service.dart';
+import '../../core/services/supabase_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../chat/chat_screen.dart';
 import '../profile/profile_screen.dart';
@@ -15,7 +15,8 @@ class UserSearchScreen extends StatefulWidget {
 
 class _UserSearchScreenState extends State<UserSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  List<ParseUser> _searchResults = [];
+  List<Map<String, dynamic>> _userResults = [];
+  List<Map<String, dynamic>> _postResults = [];
   bool _isLoading = false;
   Set<String> _friendIds = {};
 
@@ -26,44 +27,48 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   }
 
   Future<void> _loadFriends() async {
-    final friends = await ParseService.getFriends();
+    final friends = await SupabaseService.getFriends();
     if (mounted) {
       setState(() {
-        _friendIds = friends.map((f) => f.objectId!).toSet();
+        _friendIds = friends.map((f) => f['id'].toString()).toSet();
       });
     }
   }
 
   Future<void> _performSearch(String query) async {
     if (query.trim().isEmpty) {
-      setState(() => _searchResults = []);
+      setState(() { _userResults = []; _postResults = []; });
       return;
     }
 
     setState(() => _isLoading = true);
-    final results = await ParseService.searchUsers(query);
+    final users = await SupabaseService.searchUsers(query);
+    final posts = await SupabaseService.searchPosts(query);
+    
     if (mounted) {
       setState(() {
-        _searchResults = results;
+        _userResults = users;
+        _postResults = posts;
         _isLoading = false;
       });
     }
   }
 
-  Future<void> _toggleFriend(ParseUser user) async {
-    final success = await ParseService.toggleFriend(user);
+  Future<void> _toggleFriend(Map<String, dynamic> user) async {
+    final userId = user['id'].toString();
+    final success = await SupabaseService.toggleFriend(userId);
     if (!mounted) return;
     
     if (success) {
-      final isFriend = _friendIds.contains(user.objectId);
+      final isFriend = _friendIds.contains(userId);
       if (!isFriend) {
-          ParseService.sendFriendRequest(user);
+          SupabaseService.sendFriendRequest(userId);
       }
       setState(() {
         if (isFriend) {
-          _friendIds.remove(user.objectId);
+          _friendIds.remove(userId);
         } else {
-          _friendIds.add(user.objectId!);
+          _friendIds.add(userId);
         }
       });
       
@@ -91,136 +96,145 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(l10n.search_users, style: const TextStyle(fontWeight: FontWeight.bold)),
-        automaticallyImplyLeading: false, // It's now a tab
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: l10n.search_hint,
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF6366F1)),
-                filled: true,
-                fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-              ),
-              onChanged: _performSearch,
-            ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          title: Text(l10n.search_users, style: const TextStyle(fontWeight: FontWeight.bold)),
+          automaticallyImplyLeading: false,
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'People'),
+              Tab(text: 'Posts'),
+            ],
+            indicatorColor: Color(0xFF6366F1),
+            labelColor: Color(0xFF6366F1),
           ),
-          Expanded(
-            child: _isLoading
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search people or posts...',
+                  prefixIcon: const Icon(Icons.search, color: Color(0xFF6366F1)),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                ),
+                onChanged: _performSearch,
+              ),
+            ),
+            Expanded(
+              child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-                : _searchResults.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.person_search_outlined, size: 80, color: Colors.grey[200]),
-                            const SizedBox(height: 16),
-                            Text(
-                              _searchController.text.isEmpty ? 'Search for people' : l10n.no_users_found,
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 16),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: _searchResults.length,
-                        itemBuilder: (context, index) {
-                          final user = _searchResults[index];
-                          final fullName = user.get<String>('fullName') ?? user.username ?? 'User';
-                          final username = user.username ?? '';
-                          final isFriend = _friendIds.contains(user.objectId);
-                          
-                          final dynamic profilePicRaw = user.get('profilePicture');
-                          final String? profileUrl = profilePicRaw is ParseFileBase 
-                              ? profilePicRaw.url 
-                              : (profilePicRaw is String ? profilePicRaw : null);
+                : TabBarView(
+                    children: [
+                      // People Tab
+                      _userResults.isEmpty
+                        ? _buildEmptySearch('people')
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            itemCount: _userResults.length,
+                            itemBuilder: (context, index) => _buildUserTile(_userResults[index]),
+                          ),
+                      // Posts Tab
+                      _postResults.isEmpty
+                        ? _buildEmptySearch('posts')
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            itemCount: _postResults.length,
+                            itemBuilder: (context, index) => _buildPostTile(_postResults[index]),
+                          ),
+                    ],
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 16),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5)),
-                              boxShadow: [
-                                BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => ProfileScreen(userId: user.objectId)),
-                                    );
-                                  },
-                                  child: CircleAvatar(
-                                    radius: 28,
-                                    backgroundColor: const Color(0xFF6366F1).withOpacity(0.1),
-                                    backgroundImage: profileUrl != null ? CachedNetworkImageProvider(profileUrl) : null,
-                                    child: profileUrl == null ? const Icon(Icons.person, color: Color(0xFF6366F1)) : null,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (context) => ProfileScreen(userId: user.objectId)),
-                                      );
-                                    },
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(fullName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
-                                        Text('@$username', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 14)),
-                                      ],
-                                    ),
-
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.message_outlined, color: Color(0xFF6366F1)),
-                                  onPressed: () {
-                                    Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(otherUser: user)));
-                                  },
-                                ),
-                                ElevatedButton(
-                                  onPressed: () => _toggleFriend(user),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: isFriend ? Theme.of(context).dividerColor : const Color(0xFF6366F1),
-                                    foregroundColor: isFriend ? Theme.of(context).colorScheme.onSurface : Colors.white,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  ),
-                                  child: Text(
-                                    isFriend ? l10n.remove_friend : l10n.add_friend,
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
+  Widget _buildEmptySearch(String type) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(type == 'people' ? Icons.person_search_outlined : Icons.post_add_outlined, size: 80, color: Colors.grey[200]),
+          const SizedBox(height: 16),
+          Text(
+            _searchController.text.isEmpty ? 'Search for $type' : 'No $type found',
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 16),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildUserTile(Map<String, dynamic> user) {
+    final l10n = AppLocalizations.of(context)!;
+    final fullName = user['full_name'] ?? user['username'] ?? 'User';
+    final username = user['username'] ?? '';
+    final userId = user['id'].toString();
+    final isFriend = _friendIds.contains(userId);
+    final String? profileUrl = user['profile_picture'];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundImage: profileUrl != null ? CachedNetworkImageProvider(profileUrl) : null,
+            child: profileUrl == null ? const Icon(Icons.person) : null,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text('@$username', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => _toggleFriend(user),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isFriend ? Colors.grey[200] : const Color(0xFF6366F1),
+              foregroundColor: isFriend ? Colors.black : Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(isFriend ? 'Remove' : 'Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPostTile(Map<String, dynamic> post) {
+    final user = post['profiles'];
+    final content = post['content'] ?? '';
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        leading: CircleAvatar(child: Text((user?['full_name'] ?? 'U')[0])),
+        title: Text(user?['full_name'] ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(content, maxLines: 2, overflow: TextOverflow.ellipsis),
+        onTap: () {
+           // Navigate to post detail
+        },
       ),
     );
   }

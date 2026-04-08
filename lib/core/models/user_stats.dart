@@ -1,5 +1,3 @@
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
-
 class UserStats {
   final int totalXP;
   final int recentXP; // Weekly XP
@@ -19,15 +17,17 @@ class UserStats {
     this.dailyXpEarned = 0,
   });
 
-  factory UserStats.fromParse(ParseUser user) {
+  factory UserStats.fromMap(Map<String, dynamic> user) {
     return UserStats(
-      totalXP: user.get<int>('totalXP') ?? 0,
-      recentXP: user.get<int>('recentXP') ?? 0,
-      level: user.get<int>('level') ?? 1,
-      streaks: user.get<int>('streaks') ?? 0,
-      referrals: user.get<int>('referrals') ?? 0,
-      lastActionDate: user.get<DateTime>('lastActionDate') ?? DateTime.now(),
-      dailyXpEarned: user.get<int>('dailyXpEarned') ?? 0,
+      totalXP: user['points'] ?? 0,
+      recentXP: user['recent_xp'] ?? 0,
+      level: user['level'] ?? 1,
+      streaks: user['streaks'] ?? 0,
+      referrals: user['referrals'] ?? 0,
+      lastActionDate: user['last_action_date'] != null 
+          ? DateTime.parse(user['last_action_date']) 
+          : DateTime.now(),
+      dailyXpEarned: user['daily_xp_earned'] ?? 0,
     );
   }
 

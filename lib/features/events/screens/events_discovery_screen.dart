@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import '../widgets/event_card.dart';
 import '../widgets/filter_chips.dart';
 import '../../../core/providers/event_provider.dart';
 import '../event_details_screen.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/services/supabase_service.dart';
 
 class EventsDiscoveryScreen extends StatefulWidget {
   const EventsDiscoveryScreen({super.key});
@@ -17,7 +18,7 @@ class EventsDiscoveryScreen extends StatefulWidget {
 class _EventsDiscoveryScreenState extends State<EventsDiscoveryScreen> {
   final TextEditingController _searchController = TextEditingController();
   final List<String> _filters = ['All', 'Cleaning', 'Workshops', 'Volunteering', 'Music', 'Social'];
-  ParseUser? _currentUser;
+  Map<String, dynamic>? _currentUser;
 
   @override
   void initState() {
@@ -26,30 +27,19 @@ class _EventsDiscoveryScreenState extends State<EventsDiscoveryScreen> {
   }
 
   Future<void> _fetchCurrentUser() async {
-    final user = await ParseUser.currentUser() as ParseUser?;
+    final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
-      await user.fetch();
+      final details = await SupabaseService.fetchUserDetails(user.id);
       if (mounted) {
         setState(() {
-          _currentUser = user;
+          _currentUser = details;
         });
       }
     }
   }
 
-  Future<List<ParseObject>> _fetchEvents() async {
-    final QueryBuilder<ParseObject> queryBuilder =
-        QueryBuilder<ParseObject>(ParseObject('Events'))
-          ..includeObject(['createdBy']) 
-          ..orderByDescending('createdAt');
-
-    final ParseResponse apiResponse = await queryBuilder.query();
-
-    if (apiResponse.success && apiResponse.results != null) {
-      return apiResponse.results as List<ParseObject>;
-    } else {
-      return [];
-    }
+  Future<List<Map<String, dynamic>>> _fetchEvents() async {
+    return await SupabaseService.fetchEvents();
   }
 
   @override
@@ -109,7 +99,7 @@ class _EventsDiscoveryScreenState extends State<EventsDiscoveryScreen> {
             Expanded(
               child: eventProvider.isLoading 
               ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-              : FutureBuilder<List<ParseObject>>(
+              : FutureBuilder<List<Map<String, dynamic>>>(
                 future: _fetchEvents(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -124,7 +114,7 @@ class _EventsDiscoveryScreenState extends State<EventsDiscoveryScreen> {
                     return Center(child: Text(l10n.no_events_found));
                   }
 
-                  final List<ParseObject> events = snapshot.data!;
+                  final List<Map<String, dynamic>> events = snapshot.data!;
 
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -132,19 +122,20 @@ class _EventsDiscoveryScreenState extends State<EventsDiscoveryScreen> {
                     itemCount: events.length,
                     itemBuilder: (context, index) {
                       final eventObject = events[index];
+                      final eventId = eventObject['id'].toString();
                        return GestureDetector(
                          onTap: () {
                            Navigator.push(
                              context,
                              MaterialPageRoute(
-                               builder: (_) => EventDetailsScreen(eventId: eventObject.objectId!),
+                               builder: (_) => EventDetailsScreen(eventId: eventId),
                              ),
                            );
                          },
                          child: EventDiscoveryCard(
                            eventObject: eventObject,
                            currentUser: _currentUser,
-                           isJoined: eventProvider.isUserJoined(eventObject.objectId),
+                           isJoined: eventProvider.isUserJoined(eventId),
                            onJoin: () => eventProvider.joinEvent(eventObject),
                          ),
                        );

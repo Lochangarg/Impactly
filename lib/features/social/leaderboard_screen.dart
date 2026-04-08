@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../core/services/parse_service.dart';
+import '../../core/services/supabase_service.dart';
 import '../../core/models/user_stats.dart';
 
 class LeaderboardScreen extends StatefulWidget {
@@ -27,21 +27,21 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
   Future<void> _loadLeaderboards() async {
     setState(() => _isLoading = true);
     try {
-      // 1. Fetch Global (ranked by Total XP)
-      final globalQuery = QueryBuilder<ParseUser>(ParseUser.forQuery())
-        ..orderByDescending('totalXP')
-        ..setLimit(50);
-      final globalResp = await globalQuery.query();
+      final client = Supabase.instance.client;
       
-      // 2. Fetch Weekly (ranked by Recent XP / LS score)
-      final weeklyQuery = QueryBuilder<ParseUser>(ParseUser.forQuery())
-        ..setLimit(50);
-      final weeklyResp = await weeklyQuery.query();
+      // 1. Fetch profiles for Leaderboard
+      final response = await client
+          .from('profiles')
+          .select()
+          .order('points', ascending: false)
+          .limit(50);
+      
+      final users = List<Map<String, dynamic>>.from(response);
 
       if (mounted) {
         setState(() {
-          _globalLeaders = _processUsers(globalResp.results as List<ParseObject>?, sortByTotal: true);
-          _weeklyLeaders = _processUsers(weeklyResp.results as List<ParseObject>?, sortByTotal: false);
+          _globalLeaders = _processUsers(users, sortByTotal: true);
+          _weeklyLeaders = _processUsers(users, sortByTotal: false);
           _isLoading = false;
         });
       }
@@ -50,18 +50,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
     }
   }
 
-  List<LeaderboardEntry> _processUsers(List<ParseObject>? users, {required bool sortByTotal}) {
-    if (users == null) return [];
-    
+  List<LeaderboardEntry> _processUsers(List<Map<String, dynamic>> users, {required bool sortByTotal}) {
     final entries = users.map((u) {
-      final user = u as ParseUser;
-      final stats = UserStats.fromParse(user);
-      final dynamic pic = user.get('profilePicture');
-      final String? picUrl = pic is ParseFileBase ? pic.url : (pic is String ? pic : null);
+      final stats = UserStats.fromMap(u);
+      final String? picUrl = u['profile_picture'];
       
       return LeaderboardEntry(
-        userId: user.objectId!,
-        fullName: user.get<String>('fullName') ?? user.username ?? 'User',
+        userId: u['id'].toString(),
+        fullName: u['full_name'] ?? u['username'] ?? 'User',
         profilePicUrl: picUrl,
         score: sortByTotal ? stats.totalXP.toDouble() : stats.calculateLeaderboardScore(),
         rank: 0, 
@@ -73,11 +69,20 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
     entries.sort((a, b) => b.score.compareTo(a.score));
     
     // Assign ranks
+    final rankedEntries = <LeaderboardEntry>[];
     for (int i = 0; i < entries.length; i++) {
-      // entries[i] = entries[i].copyWith(rank: i + 1); // If CopyWith existed
+      final entry = entries[i];
+      rankedEntries.add(LeaderboardEntry(
+        userId: entry.userId,
+        fullName: entry.fullName,
+        profilePicUrl: entry.profilePicUrl,
+        score: entry.score,
+        rank: i + 1,
+        level: entry.level,
+      ));
     }
     
-    return entries;
+    return rankedEntries;
   }
 
   @override
@@ -132,7 +137,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
               child: Row(
                 children: [
                   Text(
-                    '${index + 1}',
+                    '${entry.rank}',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,

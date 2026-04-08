@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'widgets/event_list_item.dart';
 import 'create_event_screen.dart';
 import 'event_details_screen.dart';
-import '../../core/services/parse_service.dart';
+import '../../core/services/supabase_service.dart';
 import '../../core/providers/event_provider.dart';
 import '../../core/services/translation_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -25,8 +25,8 @@ class _EventsScreenState extends State<EventsScreen> {
   final List<String> _filters = ['All', 'Cleaning', 'Workshops', 'Volunteering', 'Music', 'Social'];
    bool _isActionLoading = false;
    String? _loadingEventId;
-   ParseUser? _currentUser;
-   bool _autoTranslate = true;
+   User? _currentUser;
+   bool _autoTranslate = false;
 
   @override
   void initState() {
@@ -36,9 +36,8 @@ class _EventsScreenState extends State<EventsScreen> {
   }
 
   Future<void> _fetchCurrentUser() async {
-    final user = await ParseUser.currentUser() as ParseUser?;
+    final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
-      await user.fetch();
       if (mounted) {
         setState(() {
           _currentUser = user;
@@ -53,8 +52,8 @@ class _EventsScreenState extends State<EventsScreen> {
     super.dispose();
   }
 
-  Future<List<ParseObject>> _getData() async {
-    return await ParseService.fetchEvents(category: _selectedCategory, searchQuery: _searchQuery);
+  Future<List<Map<String, dynamic>>> _getData() async {
+    return await SupabaseService.fetchEvents(category: _selectedCategory, searchQuery: _searchQuery);
   }
 
   @override
@@ -69,15 +68,7 @@ class _EventsScreenState extends State<EventsScreen> {
       appBar: AppBar(
         title: Text(l10n.discover_events, style: const TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: false,
-        actions: [
-          IconButton(
-            icon: Icon(_autoTranslate ? Icons.translate : Icons.g_translate_outlined, 
-              color: const Color(0xFF6366F1),
-            ),
-            tooltip: 'Toggle Translation',
-            onPressed: () => setState(() => _autoTranslate = !_autoTranslate),
-          ),
-        ],
+        actions: [],
       ),
       body: Column(
         children: [
@@ -139,7 +130,7 @@ class _EventsScreenState extends State<EventsScreen> {
 
           // Events List
           Expanded(
-            child: FutureBuilder<List<ParseObject>>(
+            child: FutureBuilder<List<Map<String, dynamic>>>(
               future: _getData(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -166,33 +157,36 @@ class _EventsScreenState extends State<EventsScreen> {
                         itemCount: events.length,
                         itemBuilder: (context, index) {
                       final event = events[index];
-                      final dateObj = event.get<DateTime>('date');
+                      final dateStrVal = event['date'];
+                      final dateObj = dateStrVal != null ? DateTime.parse(dateStrVal) : null;
                       final locale = Localizations.localeOf(context).toString();
                       final dateStr = dateObj != null ? DateFormat('EEE, MMM d • hh:mm a', locale).format(dateObj) : l10n.no_date;
 
-                      final isOwner = event.get<ParseObject>('createdBy')?.objectId == _currentUser?.objectId;
+                      final isOwner = event['created_by'] == _currentUser?.id;
+                      final eventId = event['id'].toString();
+                      final int points = event['points'] ?? 0;
                       
                       return GestureDetector(
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => EventDetailsScreen(eventId: event.objectId!))),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => EventDetailsScreen(eventId: eventId))),
                         child: FutureBuilder<List<String>>(
                           future: Future.wait([
-                            _autoTranslate && isHindi ? TranslationService.translate(event.get<String>('title') ?? 'Untitled', 'hi') : Future.value(event.get<String>('title') ?? 'Untitled'),
-                            _autoTranslate && isHindi ? TranslationService.translate(event.get<String>('location') ?? 'Virtual', 'hi') : Future.value(event.get<String>('location') ?? 'Virtual'),
+                            _autoTranslate ? TranslationService.translate(event['title'] ?? 'Untitled', 'hi') : Future.value(event['title'] ?? 'Untitled'),
+                            _autoTranslate ? TranslationService.translate(event['location'] ?? 'Virtual', 'hi') : Future.value(event['location'] ?? 'Virtual'),
                           ]),
                           builder: (context, transSnapshot) {
-                            final translatedTitle = transSnapshot.data?[0] ?? event.get<String>('title') ?? 'Untitled';
-                            final translatedLocation = transSnapshot.data?[1] ?? event.get<String>('location') ?? 'Virtual';
+                            final translatedTitle = transSnapshot.data?[0] ?? event['title'] ?? 'Untitled';
+                            final translatedLocation = transSnapshot.data?[1] ?? event['location'] ?? 'Virtual';
 
                             return EventListItem(
                               title: translatedTitle,
                               date: dateStr,
                               location: translatedLocation,
-                              points: event.get<int>('points') ?? 0,
-                              category: event.get<String>('category') ?? 'General',
-                              isLoading: _loadingEventId == event.objectId,
+                              points: points,
+                              category: event['category'] ?? 'General',
+                              isLoading: _loadingEventId == eventId,
                               isOwner: isOwner,
-                              isJoined: eventProvider.isUserJoined(event.objectId),
-                               onJoin: () => eventProvider.joinEvent(event),
+                              isJoined: eventProvider.isUserJoined(eventId),
+                               onJoin: () => eventProvider.joinEvent(eventId, points),
                             );
                           }
                         ),

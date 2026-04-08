@@ -1,44 +1,35 @@
 import 'package:flutter/foundation.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_stats.dart';
 
 class LeaderboardService {
+  static final client = Supabase.instance.client;
+
   /// Fetch Global Leaderboard entry ranking by LS = IS_recent + (0.3 × IS_total)
-  static Future<List<LeaderboardEntry>> fetchGlobalLeaderboard({int limit = 20, String? community}) async {
+  static Future<List<LeaderboardEntry>> fetchGlobalLeaderboard({int limit = 20}) async {
     try {
-      final query = QueryBuilder<ParseUser>(ParseUser.forQuery());
-      
-      if (community != null && community.isNotEmpty) {
-        query.whereEqualTo('community', community);
-      }
-
-      // 1. Fetch current users with their stats
-      // Note: We can't sort by the LS = IS_recent + (0.3 * IS_total) directly in most NoSQL backends.
-      // So we fetch the top candidates by totalXP or recentXP and sort them in-memory for accuracy.
-      // Alternatively, we use Cloud Code (Back4App) to pre-calculate LS.
-      // We'll fetch top total as candidate pool for efficiency.
-      query.orderByDescending('totalXP');
-      query.setLimit(limit * 2); // Fetch more for sorting accuracy
-
-      final response = await query.query();
-      if (!response.success || response.results == null) return [];
+      // 1. Fetch current users with their stats from profiles
+      final response = await client
+          .from('profiles')
+          .select()
+          .order('points', ascending: false)
+          .limit(limit * 2);
 
       final list = <LeaderboardEntry>[];
-      final users = response.results!.cast<ParseUser>();
+      final users = List<Map<String, dynamic>>.from(response);
 
       for (var user in users) {
-        final stats = UserStats.fromParse(user);
+        final stats = UserStats.fromMap(user);
         final score = stats.calculateLeaderboardScore();
-        final dynamic pic = user.get('profilePicture');
-        final String? picUrl = pic is ParseFileBase ? pic.url : (pic is String ? pic : null);
+        final String? picUrl = user['profile_picture'];
 
         list.add(LeaderboardEntry(
-          userId: user.objectId!,
-          fullName: user.get<String>('fullName') ?? user.username ?? 'User',
+          userId: user['id'].toString(),
+          fullName: user['full_name'] ?? user['username'] ?? 'User',
           profilePicUrl: picUrl,
           score: score,
-          rank: 0, // Placeholder for now
-          level: user.get<int>('level') ?? 1,
+          rank: 0, // Placeholder
+          level: user['level'] ?? 1,
         ));
       }
 
@@ -65,24 +56,8 @@ class LeaderboardService {
     }
   }
 
-  /// Weekly Reset: This is usually handled via Cron or Cloud Functions.
-  /// Locally, we can detect reset by storing last reset date and checking it.
+  /// Weekly Reset: Usually handled via Supabase edge functions or cron.
   static Future<void> checkWeeklyReset() async {
-    final query = QueryBuilder<ParseObject>(ParseObject('SystemConfig'))
-      ..whereEqualTo('key', 'lastWeeklyReset');
-    
-    final response = await query.query();
-    DateTime lastReset = DateTime.now();
-
-    if (response.success && response.results != null && response.results!.isNotEmpty) {
-      lastReset = response.results!.first.get<DateTime>('value')!;
-    }
-
-    final now = DateTime.now();
-    if (now.difference(lastReset).inDays >= 7) {
-       // Reset all users' recentXP to 0
-       // This MUST be Cloud Functions in production for scalability.
-       // locally we mock reset notification or call cloud function trigger
-    }
+    // Moved to backend edge functions triggered by pg_cron
   }
 }
