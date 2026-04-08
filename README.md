@@ -37,7 +37,7 @@ Despite growing awareness of social responsibility among youth, a significant di
 | **Parikshit Kurel** | PU02424EUG10010 | Project Lead & Full-Stack Developer | Architecture design, Flutter development, Supabase integration, state management, deployment |
 | **Lochan Garg** | PU02424EUG10018 | UI/UX Designer & Frontend Developer | Wireframing (Miro), visual design, user research, screen implementation, usability testing |
 
-> **Module:** BCS4601 — Design Project (Mobile Application) · Avantika University · 2025–2026
+> **Collaborative Note:** Both team members worked closely across all phases of the project — from research and design to development, testing, and documentation. While roles above reflect primary ownership areas, all code, design decisions, and documentation were produced through pair programming and collaborative review.
 
 ---
 
