@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../l10n/app_localizations.dart';
+import '../../core/services/supabase_service.dart';
 import 'edit_profile_screen.dart';
 
 class AccountInfoScreen extends StatefulWidget {
@@ -11,7 +12,7 @@ class AccountInfoScreen extends StatefulWidget {
 }
 
 class _AccountInfoScreenState extends State<AccountInfoScreen> {
-  ParseUser? _currentUser;
+  Map<String, dynamic>? _currentUser;
   bool _isLoading = true;
 
   @override
@@ -22,12 +23,12 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
 
   Future<void> _loadUser() async {
     setState(() => _isLoading = true);
-    final user = await ParseUser.currentUser() as ParseUser?;
+    final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
-      await user.fetch();
+      final details = await SupabaseService.fetchUserDetails(user.id);
       if (mounted) {
         setState(() {
-          _currentUser = user;
+          _currentUser = details;
           _isLoading = false;
         });
       }
@@ -58,9 +59,9 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildProfileItem(Icons.email_outlined, l10n.email, _currentUser!.emailAddress ?? 'No email'),
-                      _buildProfileItem(Icons.phone_outlined, l10n.phone, _currentUser!.get<String>('phone') ?? 'No phone'),
-                      _buildProfileItem(Icons.location_on_outlined, l10n.location, _currentUser!.get<String>('location') ?? 'No location'),
+                      _buildProfileItem(Icons.email_outlined, l10n.email, Supabase.instance.client.auth.currentUser?.email ?? 'No email'),
+                      _buildProfileItem(Icons.phone_outlined, l10n.phone, _currentUser!['phone'] ?? 'No phone'),
+                      _buildProfileItem(Icons.location_on_outlined, l10n.location, _currentUser!['city'] ?? 'No location'),
                       const SizedBox(height: 24),
                       Text(l10n.interests, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 12),
@@ -87,20 +88,22 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
             child: Icon(icon, color: const Color(0xFF6366F1), size: 24),
           ),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
-              Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
+                Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInterests(ParseUser user, AppLocalizations l10n) {
-    final List<dynamic> interests = user.get<List<dynamic>>('interests') ?? [];
+  Widget _buildInterests(Map<String, dynamic> user, AppLocalizations l10n) {
+    final List<dynamic> interests = user['interests'] ?? [];
     if (interests.isEmpty) return Text(l10n.no_interests_specified, style: const TextStyle(color: Colors.grey));
 
     return Wrap(
@@ -134,21 +137,18 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
     );
   }
 
-  Widget _buildEditButton(BuildContext context, ParseUser user, AppLocalizations l10n) {
+  Widget _buildEditButton(BuildContext context, Map<String, dynamic> user, AppLocalizations l10n) {
     return ElevatedButton(
       onPressed: () async {
         final result = await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => EditProfileScreen(initialData: {
-            'fullName': _currentUser!.get<String>('fullName'),
-            'username': _currentUser!.username,
-            'phone': _currentUser!.get<String>('phone'),
-            'location': _currentUser!.get<String>('location'),
-            'interests': _currentUser!.get<List<dynamic>>('interests'),
-            'profilePicUrl': () {
-              final dynamic f = _currentUser!.get('profilePicture');
-              return f is ParseFileBase ? f.url : (f is String ? f : null);
-            }(),
+            'fullName': _currentUser!['full_name'],
+            'username': _currentUser!['username'],
+            'phone': _currentUser!['phone'],
+            'location': _currentUser!['city'],
+            'interests': _currentUser!['interests'],
+            'profilePicUrl': _currentUser!['profile_picture'],
           })),
         );
         if (result == true) _loadUser();

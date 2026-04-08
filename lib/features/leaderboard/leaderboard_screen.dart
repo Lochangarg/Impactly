@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
-import '../../core/services/parse_service.dart';
+import '../../core/services/supabase_service.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
@@ -10,12 +9,12 @@ class LeaderboardScreen extends StatefulWidget {
 }
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
-  late Future<List<ParseUser>> _leaderboardUsers;
+  late Future<List<Map<String, dynamic>>> _leaderboardUsers;
 
   @override
   void initState() {
     super.initState();
-    _leaderboardUsers = ParseService.fetchLeaderboard();
+    _leaderboardUsers = SupabaseService.fetchLeaderboard();
   }
 
   @override
@@ -30,7 +29,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: FutureBuilder<List<ParseUser>>(
+      body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _leaderboardUsers,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -43,12 +42,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           }
 
           return RefreshIndicator(
-            onRefresh: () async => setState(() => _leaderboardUsers = ParseService.fetchLeaderboard()),
+            onRefresh: () async => setState(() => _leaderboardUsers = SupabaseService.fetchLeaderboard()),
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Column(
                 children: [
-                  _buildPodium(users.take(3).toList()),
+                   _buildPodium(users.take(3).toList().cast<Map<String, dynamic>>()),
                   const SizedBox(height: 40),
                   const Align(
                     alignment: Alignment.centerLeft,
@@ -69,11 +68,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
-  Widget _buildPodium(List<ParseUser> topUsers) {
+  Widget _buildPodium(List<Map<String, dynamic>> topUsers) {
     if (topUsers.isEmpty) return const SizedBox.shrink();
 
     // Reorder as [2nd, 1st, 3rd] for visual podium
-    final podiumOrder = <ParseUser?>[null, null, null];
+    final podiumOrder = <Map<String, dynamic>?>[null, null, null];
     if (topUsers.length >= 1) podiumOrder[1] = topUsers[0];
     if (topUsers.length >= 2) podiumOrder[0] = topUsers[1];
     if (topUsers.length >= 3) podiumOrder[2] = topUsers[2];
@@ -104,7 +103,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       radius: avatarSize / 2,
                       backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                       child: Text(
-                        (user.get<String>('fullName') ?? '?')[0].toUpperCase(),
+                        (user['full_name'] ?? '?')[0].toUpperCase(),
                         style: TextStyle(fontSize: avatarSize / 3, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                       ),
                     ),
@@ -115,13 +114,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                user.get<String>('fullName')?.split(' ')[0] ?? 'User',
+                user['full_name']?.split(' ')[0] ?? 'User',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: isFirst ? 16 : 14),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                '${user.get<int>('points') ?? 0} pts',
+                '${user['points'] ?? 0} pts',
                 style: const TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.w600, fontSize: 12),
               ),
               const SizedBox(height: 16),
@@ -160,7 +159,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
-  Widget _buildLeaderboardTile(int rank, ParseUser user) {
+  Widget _buildLeaderboardTile(int rank, Map<String, dynamic> user) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -193,7 +192,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             radius: 20,
             backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
             child: Text(
-              (user.get<String>('fullName') ?? 'U')[0].toUpperCase(),
+              (user['full_name'] ?? 'U')[0].toUpperCase(),
               style: const TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.bold),
             ),
           ),
@@ -203,18 +202,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  user.get<String>('fullName') ?? 'User',
+                  user['full_name'] ?? 'User',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface),
                 ),
                 Text(
-                  'Level ${user.get<int>('level') ?? 1}',
+                  'Level ${user['level'] ?? 1}',
                   style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12),
                 ),
               ],
             ),
           ),
           Text(
-            '${user.get<int>('points') ?? 0} pts',
+            '${user['points'] ?? 0} pts',
             style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF6366F1)),
           ),
         ],

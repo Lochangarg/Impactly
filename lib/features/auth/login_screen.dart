@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/navigation/main_screen.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../core/services/supabase_service.dart';
 import 'widgets/auth_field.dart';
 import 'widgets/auth_button.dart';
 import 'signup_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -36,25 +39,24 @@ class _LoginScreenState extends State<LoginScreen> {
       final password = _passwordController.text.trim();
 
       try {
-        final user = ParseUser(email, password, null);
-        final response = await user.login();
+        final response = await SupabaseService.signIn(email, password);
 
-        if (response.success) {
+        if (response.session != null) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Login Successful 🚀")),
+              const SnackBar(content: Text("Login Successful"), backgroundColor: Colors.green),
             );
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const MainScreen()),
             );
           }
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(response.error?.message ?? "Login failed")),
-            );
-          }
+        }
+      } on AuthException catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message)),
+          );
         }
       } catch (e) {
         if (mounted) {
@@ -85,9 +87,24 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Align(
                   alignment: Alignment.centerRight,
-                  child: IconButton(
-                    icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-                    onPressed: () => themeProvider.toggleTheme(),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.translate, size: 20),
+                        tooltip: 'Translate Page',
+                        onPressed: () {
+                          // TODO: Implement translation logic or language picker
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Translation feature coming soon!")),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode, size: 20),
+                        onPressed: () => themeProvider.toggleTheme(),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -130,7 +147,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _passwordController,
                   hintText: l10n.password,
                   isPasswordField: true,
+                  obscureText: _obscurePassword,
                   prefixIcon: Icons.lock_outline,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your password';
@@ -146,7 +172,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                      );
+                    },
                     child: Text(
                       l10n.forgot_password,
                       style: const TextStyle(

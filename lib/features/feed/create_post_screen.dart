@@ -1,8 +1,8 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../core/services/parse_service.dart';
+import '../../core/services/supabase_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/services/translation_service.dart';
 
@@ -10,28 +10,32 @@ class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
 
   @override
-  State<CreatePostScreen> createState() => _CreatePostScreenState();
+  State<CreatePostScreen> createState() => _CreateEventScreenState();
 }
 
-class _CreatePostScreenState extends State<CreatePostScreen> {
+class _CreateEventScreenState extends State<CreatePostScreen> {
   final _contentController = TextEditingController();
-  ParseObject? _selectedEvent;
-  File? _imageFile;
+  Map<String, dynamic>? _selectedEvent;
+  Uint8List? _imageBytes;
+  String? _fileExt;
   final _picker = ImagePicker();
   bool _isLoading = false;
-  bool _autoTranslate = true;
-  Future<List<ParseObject>>? _joinedEvents;
+  Future<List<Map<String, dynamic>>>? _joinedEvents;
 
   @override
   void initState() {
     super.initState();
-    _joinedEvents = ParseService.fetchJoinedEvents();
+    _joinedEvents = SupabaseService.fetchJoinedEvents();
   }
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (pickedFile != null) {
-      setState(() => _imageFile = File(pickedFile.path));
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _imageBytes = bytes;
+        _fileExt = pickedFile.path.split('.').last;
+      });
     }
   }
 
@@ -47,15 +51,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     
     try {
       String content = _contentController.text.trim();
-      
-      if (_autoTranslate) {
-        content = await TranslationService.translate(content, 'hi');
-      }
 
-      final success = await ParseService.createPost(
+      final success = await SupabaseService.createPost(
         content: content,
-        event: _selectedEvent!,
-        image: _imageFile,
+        eventId: _selectedEvent!['id'].toString(),
+        imageBytes: _imageBytes,
+        fileExt: _fileExt,
       );
 
       if (success && mounted) {
@@ -76,24 +77,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(l10n.new_post, style: const TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
         elevation: 0,
-        foregroundColor: const Color(0xFF111827),
         actions: [
-          Row(
-            children: [
-              const Text('Auto-Translate', style: TextStyle(fontSize: 10, color: Colors.grey)),
-              Switch(
-                value: _autoTranslate,
-                onChanged: (val) => setState(() => _autoTranslate = val),
-                activeColor: const Color(0xFF6366F1),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            ],
-          ),
           TextButton(
             onPressed: _isLoading ? null : () => _onCreatePost(l10n),
             child: Text(
@@ -114,26 +102,26 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Event Picker
-            Text(l10n.event_update, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF6B7280))),
+            Text(l10n.event_update, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
             const SizedBox(height: 12),
-            FutureBuilder<List<ParseObject>>(
+            FutureBuilder<List<Map<String, dynamic>>>(
               future: _joinedEvents,
               builder: (context, snapshot) {
                 final events = snapshot.data ?? [];
                 if (events.isEmpty && snapshot.connectionState == ConnectionState.done) {
-                  return Text(l10n.join_event_to_post);
+                  return Text(l10n.join_event_to_post, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)));
                 }
                 
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(12)),
                   child: DropdownButtonHideUnderline(
-                    child: DropdownButton<ParseObject>(
+                    child: DropdownButton<Map<String, dynamic>>(
                       value: _selectedEvent,
                       hint: Text(l10n.select_joined_event),
                       isExpanded: true,
                       items: events.map((e) {
-                        return DropdownMenuItem(value: e, child: Text(e.get<String>('title') ?? 'Untitled'));
+                        return DropdownMenuItem(value: e, child: Text(e['title'] ?? 'Untitled'));
                       }).toList(),
                       onChanged: (val) => setState(() => _selectedEvent = val),
                     ),
@@ -149,27 +137,27 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               maxLines: null,
               decoration: InputDecoration(
                 hintText: l10n.whats_the_update,
-                hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+                hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
                 border: InputBorder.none,
               ),
-              style: const TextStyle(fontSize: 18, color: Color(0xFF111827), height: 1.5),
+              style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurface, height: 1.5),
             ),
             
             const SizedBox(height: 32),
 
             // Image Preview
-            if (_imageFile != null)
+            if (_imageBytes != null)
               Stack(
                 children: [
-                  ClipRRect(
+                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: Image.file(_imageFile!, width: double.infinity, height: 250, fit: BoxFit.cover),
+                    child: Image.memory(_imageBytes!, width: double.infinity, height: 250, fit: BoxFit.cover),
                   ),
                   Positioned(
                     top: 8,
                     right: 8,
                     child: GestureDetector(
-                      onTap: () => setState(() => _imageFile = null),
+                      onTap: () => setState(() => _imageBytes = null),
                       child: const CircleAvatar(backgroundColor: Colors.black54, radius: 14, child: Icon(Icons.close, color: Colors.white, size: 16)),
                     ),
                   )
@@ -184,7 +172,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               icon: const Icon(Icons.add_photo_alternate_outlined),
               label: Text(l10n.add_photo),
               style: OutlinedButton.styleFrom(
-                backgroundColor: const Color(0xFFF3F4F6),
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 foregroundColor: const Color(0xFF6366F1),
                 side: BorderSide.none,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

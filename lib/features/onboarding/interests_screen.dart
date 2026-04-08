@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/navigation/main_screen.dart';
+import '../../core/services/supabase_service.dart';
 
 class InterestCategory {
   final String title;
@@ -47,20 +48,30 @@ class _InterestsScreenState extends State<InterestsScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final user = await ParseUser.currentUser() as ParseUser?;
+      final user = Supabase.instance.client.auth.currentUser;
       if (user != null) {
-        user.set('interests', _selectedInterests.toList());
-        final response = await user.save();
+        final success = await SupabaseService.updateProfile(
+          userId: user.id,
+          data: {
+            'interests': _selectedInterests.toList(),
+          },
+        );
         
-        if (response.success) {
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const MainScreen()),
-            );
-          }
-        } else {
-          throw response.error!.message;
+        if (success && mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+          );
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to update profile. Please try again.'), backgroundColor: Colors.red),
+          );
+        }
+      } else {
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('User session lost. Please log in again.'), backgroundColor: Colors.red),
+          );
         }
       }
     } catch (e) {

@@ -11,14 +11,19 @@ class AuthField extends StatelessWidget {
   final TextInputType keyboardType;
   final List<TextInputFormatter>? inputFormatters;
 
+  final Widget? suffixIcon;
+  final bool obscureText;
+
   const AuthField({
     super.key,
     required this.controller,
     required this.hintText,
     this.isPasswordField = false,
+    this.obscureText = false,
     this.validator,
     this.prefixIcon,
     this.prefixText,
+    this.suffixIcon,
     this.keyboardType = TextInputType.text,
     this.inputFormatters,
   });
@@ -27,7 +32,7 @@ class AuthField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
-      obscureText: isPasswordField,
+      obscureText: isPasswordField ? obscureText : false,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       style: TextStyle(fontSize: 15, color: Theme.of(context).colorScheme.onSurface),
@@ -36,6 +41,7 @@ class AuthField extends StatelessWidget {
         prefixIcon: prefixIcon != null 
           ? Icon(prefixIcon, size: 20, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)) 
           : null,
+        suffixIcon: suffixIcon,
         prefixText: prefixText,
         prefixStyle: TextStyle(
           color: Theme.of(context).colorScheme.onSurface,

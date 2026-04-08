@@ -1,4 +1,5 @@
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/services/supabase_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../l10n/app_localizations.dart';
@@ -26,6 +27,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _locationController = TextEditingController();
   
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -73,44 +75,63 @@ class _SignupScreenState extends State<SignupScreen> {
       final phone = '+91${_phoneController.text.trim()}';
       final location = _locationController.text.trim();
 
-      final user = ParseUser.createUser(username, password, email);
-      user.set('name', fullName);
-      user.set('fullName', fullName);
-      user.set('phone', phone);
-      user.set('location', location);
+      try {
+        final response = await SupabaseService.signUp(
+          email, 
+          password, 
+          data: {
+            'full_name': fullName,
+            'username': username,
+            'phone': phone,
+            'city': location,
+          }
+        );
 
-      final acl = ParseACL()
-        ..setPublicReadAccess(allowed: true)
-        ..setPublicWriteAccess(allowed: false);
-      user.setACL(acl);
-
-      final response = await user.signUp();
-
-      setState(() => _isLoading = false);
-
-      if (response.success) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Account created! Let's personalize your feed 🚀"),
-              backgroundColor: Colors.green,
-            ),
-          );
-          
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const InterestsScreen()),
-          );
+        if (response.user != null) {
+          if (mounted) {
+            if (response.session != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Account created! Let's personalize your feed 🚀"),
+                  backgroundColor: Colors.green,
+                ),
+              );
+              
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const InterestsScreen()),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Success! Please check your email to confirm your account."),
+                  backgroundColor: Colors.blue,
+                ),
+              );
+              Navigator.pop(context); // Go back to login
+            }
+          }
         }
-      } else {
+      } on AuthException catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(response.error!.message),
+              content: Text(e.message),
               backgroundColor: Colors.red,
             ),
           );
         }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("An error occurred: $e"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
       }
     }
   }
@@ -161,7 +182,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 _buildLabel(l10n.full_name),
                 AuthField(
                   controller: _fullNameController,
-                  hintText: 'e.g. Parikshit Kurel',
+                  hintText: 'Full Name',
                   prefixIcon: Icons.person_outline,
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
@@ -173,7 +194,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 _buildLabel(l10n.username),
                 AuthField(
                   controller: _usernameController,
-                  hintText: 'e.g. parikshit_impact',
+                  hintText: 'Username',
                   prefixIcon: Icons.alternate_email,
                   validator: (value) => value == null || value.isEmpty ? 'Required' : null,
                 ),
@@ -203,7 +224,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           _buildLabel(l10n.phone),
                           AuthField(
                             controller: _phoneController,
-                            hintText: '9876543210',
+                            hintText: 'Phone Number',
                             prefixIcon: Icons.phone_outlined,
                             prefixText: '+91 ',
                             keyboardType: TextInputType.number,
@@ -239,7 +260,16 @@ class _SignupScreenState extends State<SignupScreen> {
                   controller: _passwordController,
                   hintText: l10n.password,
                   isPasswordField: true,
+                  obscureText: _obscurePassword,
                   prefixIcon: Icons.lock_outline,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Required';
                     if (value.length < 6) return 'Minimum 6 characters';
@@ -253,7 +283,16 @@ class _SignupScreenState extends State<SignupScreen> {
                   controller: _confirmPasswordController,
                   hintText: 'Match password',
                   isPasswordField: true,
+                  obscureText: _obscurePassword,
                   prefixIcon: Icons.lock_reset,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Required';
                     if (value != _passwordController.text) return 'Passwords do not match';

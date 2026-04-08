@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../l10n/app_localizations.dart';
 
-//updated commit fix
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
 
@@ -32,33 +31,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     try {
-      final user = await ParseUser.currentUser() as ParseUser?;
-      if (user != null) {
-        user.password = _newPasswordController.text;
-        final response = await user.save();
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(password: _newPasswordController.text.trim()),
+      );
 
-        if (mounted) {
-          if (response.success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(l10n.password_changed_success),
-                backgroundColor: Colors.green,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            );
-            Navigator.pop(context);
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(response.error?.message ?? l10n.password_change_failed),
-                backgroundColor: Colors.redAccent,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            );
-          }
-        }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.password_changed_success),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
@@ -81,16 +67,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           l10n.change_password,
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF111827), size: 20),
+          icon: const Icon(Icons.arrow_back_ios, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -160,7 +145,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
@@ -169,7 +154,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             hintText: 'Enter $label',
             hintStyle: const TextStyle(color: Colors.grey),
             filled: true,
-            fillColor: const Color(0xFFF9FAFB),
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
             prefixIcon: const Icon(Icons.lock_outline, size: 20),
             suffixIcon: IconButton(
@@ -177,6 +162,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               onPressed: onToggleVisiblity,
             ),
           ),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
           validator: validator,
         ),
       ],

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
-import '../../core/services/parse_service.dart';
+import '../../core/services/supabase_service.dart';
 import '../../l10n/app_localizations.dart';
 
 class PostDetailScreen extends StatefulWidget {
-  final ParseObject post;
+  final Map<String, dynamic> post;
   final String userName;
   final String? userProfileUrl;
   final String eventTitle;
@@ -25,11 +25,11 @@ class PostDetailScreen extends StatefulWidget {
 
 class _PostDetailScreenState extends State<PostDetailScreen> {
   final TextEditingController _commentController = TextEditingController();
-  List<ParseObject> _comments = [];
+  List<Map<String, dynamic>> _comments = [];
   bool _isLoadingComments = true;
   bool _isLiked = false;
   int _likeCount = 0;
-  ParseUser? _currentUser;
+  User? _currentUser;
 
   @override
   void initState() {
@@ -38,10 +38,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Future<void> _fetchInitialData() async {
-    _currentUser = await ParseService.getCurrentUser();
-    final List<dynamic> likes = widget.post.get<List<dynamic>>('likes') ?? [];
+    _currentUser = Supabase.instance.client.auth.currentUser;
+    final List<dynamic> likes = widget.post['likes'] as List<dynamic>? ?? [];
     if (_currentUser != null) {
-      _isLiked = likes.contains(_currentUser!.objectId);
+      _isLiked = likes.contains(_currentUser!.id);
     }
     _likeCount = likes.length;
     _fetchComments();
@@ -49,7 +49,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   Future<void> _fetchComments() async {
     if (mounted) setState(() => _isLoadingComments = true);
-    final comments = await ParseService.fetchComments(widget.post.objectId!);
+    final comments = await SupabaseService.fetchComments(widget.post['id'].toString());
     if (mounted) {
       setState(() {
         _comments = comments;
@@ -66,7 +66,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       _likeCount += _isLiked ? 1 : -1;
     });
 
-    final success = await ParseService.toggleLike(widget.post);
+    final success = await SupabaseService.toggleLike(widget.post['id'].toString());
     if (!success) {
       // Revert if failed
       setState(() {
@@ -83,7 +83,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     _commentController.clear();
     FocusScope.of(context).unfocus();
 
-    final success = await ParseService.addComment(widget.post.objectId!, text);
+    final success = await SupabaseService.addComment(widget.post['id'].toString(), text);
     if (success) {
       _fetchComments();
     }
@@ -92,10 +92,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final date = widget.post.createdAt;
+    final createdAtStr = widget.post['created_at'];
+    final date = createdAtStr != null ? DateTime.parse(createdAtStr) : DateTime.now();
     final locale = Localizations.localeOf(context).toString();
-    final dateStr = date != null ? DateFormat('MMM d, yyyy • hh:mm a', locale).format(date) : l10n.recently;
-    final postImageUrl = widget.post.get<ParseFile>('image')?.url;
+    final dateStr = DateFormat('MMM d, yyyy • hh:mm a', locale).format(date);
+    final postImageUrl = widget.post['image_url'];
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -151,10 +152,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Content
+                                    // Content
                   Text(
-                    widget.post.get<String>('content') ?? '',
+                    widget.post['content'] ?? '',
                     style: TextStyle(fontSize: 16, height: 1.6, color: Theme.of(context).colorScheme.onSurface),
                   ),
                   
@@ -238,10 +238,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       itemCount: _comments.length,
                       itemBuilder: (context, index) {
                         final comment = _comments[index];
-                        final user = comment.get<ParseUser>('user');
-                        final userName = user?.get<String>('fullName') ?? user?.username ?? 'User';
-                        final avatar = user?.get('profilePicture');
-                        final avatarUrl = avatar is ParseFileBase ? avatar.url : (avatar is String ? avatar : null);
+                        final userProfile = comment['profiles'];
+                        final String userName = userProfile?['full_name'] ?? userProfile?['username'] ?? 'User';
+                        final String? avatarUrl = userProfile?['profile_picture'];
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 20),
@@ -262,7 +261,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                     Text(userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Theme.of(context).colorScheme.onSurface)),
                                     const SizedBox(height: 4),
                                     Text(
-                                      comment.get<String>('text') ?? '',
+                                      comment['content'] ?? '',
                                       style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), fontSize: 14),
                                     ),
                                   ],
@@ -273,6 +272,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         );
                       },
                     ),
+
                 ],
               ),
             ),

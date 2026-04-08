@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../l10n/app_localizations.dart';
-import '../../core/services/translation_service.dart';
+import '../../core/services/supabase_service.dart';
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 
 class CreateEventScreen extends StatefulWidget {
   const CreateEventScreen({super.key});
@@ -17,11 +19,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
   final _pointsController = TextEditingController();
-  bool _autoTranslate = true;
-  
   String _selectedCategory = 'Cleaning';
   DateTime? _selectedDate;
   bool _isLoading = false;
+  Uint8List? _imageBytes;
+  String? _fileExt;
+  final _picker = ImagePicker();
 
   final List<String> _categories = ['Cleaning', 'Workshops', 'Volunteering', 'Music', 'Social'];
 
@@ -59,6 +62,17 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     }
   }
 
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _imageBytes = bytes;
+        _fileExt = pickedFile.path.split('.').last;
+      });
+    }
+  }
+
   Future<void> _createEvent() async {
     if (!_formKey.currentState!.validate() || _selectedDate == null) {
       if (_selectedDate == null) {
@@ -72,41 +86,25 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final user = await ParseUser.currentUser() as ParseUser?;
-      
-      String title = _titleController.text.trim();
-      String description = _descriptionController.text.trim();
-      String location = _locationController.text.trim();
+      final success = await SupabaseService.createEvent(
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        location: _locationController.text.trim(),
+        category: _selectedCategory,
+        points: int.parse(_pointsController.text.trim()),
+        date: _selectedDate!,
+        imageBytes: _imageBytes,
+        fileExt: _fileExt,
+      );
 
-      if (_autoTranslate) {
-        title = await TranslationService.translate(title, 'hi');
-        description = await TranslationService.translate(description, 'hi');
-        location = await TranslationService.translate(location, 'hi');
-      }
-
-      final event = ParseObject('Events')
-        ..set('title', title)
-        ..set('description', description)
-        ..set('location', location)
-        ..set('category', _selectedCategory)
-        ..set('points', int.parse(_pointsController.text.trim()))
-        ..set('date', _selectedDate)
-        ..set('createdBy', user?.toPointer());
-
-      final response = await event.save();
-
-      if (response.success) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Event Created 🎉'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.pop(context, true);
-        }
-      } else {
-        throw response.error!.message;
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Event Created 🎉'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -132,18 +130,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(l10n.create_new_event, style: const TextStyle(fontWeight: FontWeight.bold)),
-        actions: [
-          Row(
-            children: [
-              const Text('Auto-Hindi', style: TextStyle(fontSize: 12, color: Colors.grey)),
-              Switch(
-                value: _autoTranslate,
-                onChanged: (val) => setState(() => _autoTranslate = val),
-                activeColor: const Color(0xFF6366F1),
-              ),
-            ],
-          ),
-        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -159,6 +145,34 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 const SizedBox(height: 20),
                 _buildLabel(l10n.description_label),
                 _buildTextField(_descriptionController, l10n.description_hint, Icons.description, maxLines: 3, l10n: l10n),
+                
+                const SizedBox(height: 20),
+                _buildLabel('Event Image'),
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    width: double.infinity,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(16),
+                      image: _imageBytes != null 
+                        ? DecorationImage(image: MemoryImage(_imageBytes!), fit: BoxFit.cover)
+                        : null,
+                    ),
+                    child: _imageBytes == null 
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_photo_alternate_outlined, size: 40, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
+                            const SizedBox(height: 8),
+                            Text('Add photo to attract more volunteers', 
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4), fontSize: 13)),
+                          ],
+                        )
+                      : const SizedBox.shrink(),
+                  ),
+                ),
                 
                 const SizedBox(height: 20),
                 _buildLabel(l10n.location_label),

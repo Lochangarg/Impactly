@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../core/services/parse_service.dart';
+import '../../core/services/supabase_service.dart';
 import '../../l10n/app_localizations.dart';
-import '../profile/profile_screen.dart'; // Reuse logic if possible, or create UserProfileScreen
+import '../profile/profile_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -13,7 +13,7 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  List<ParseObject> _notifications = [];
+  List<Map<String, dynamic>> _notifications = [];
   bool _isLoading = true;
 
   @override
@@ -23,7 +23,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _loadNotifications() async {
-    final results = await ParseService.fetchNotifications();
+    final results = await SupabaseService.fetchNotifications();
     if (mounted) {
       setState(() {
         _notifications = results;
@@ -32,8 +32,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  Future<void> _respond(ParseObject notification, bool accept) async {
-    final success = await ParseService.respondToFriendRequest(notification, accept);
+  Future<void> _respond(Map<String, dynamic> notification, bool accept) async {
+    final success = await SupabaseService.respondToFriendRequest(notification['id'].toString(), accept);
     if (success && mounted) {
       _loadNotifications();
     }
@@ -55,13 +55,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   itemCount: _notifications.length,
                   itemBuilder: (context, index) {
                     final note = _notifications[index];
-                    final sender = note.get<ParseUser>('sender');
-                    final type = note.get<String>('type');
-                    final status = note.get<String>('status');
-                    final message = note.get<String>('message') ?? 'New notification';
-                    final profilePic = sender?.get('profilePicture');
-                    String? profileUrl;
-                    if (profilePic is ParseFileBase) profileUrl = profilePic.url;
+                    final senderProfile = note['profiles'];
+                    final type = note['type'];
+                    final status = note['status'];
+                    final message = note['message'] ?? 'New notification';
+                    final String? profileUrl = senderProfile?['profile_picture'];
 
                     return Card(
                       elevation: 0,
@@ -95,12 +93,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   ],
                                 ),
                               )
-                            : status != null ? Text(status.toUpperCase(), style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))) : null,
+                            : status != null ? Text(status.toString().toUpperCase(), style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))) : null,
                         onTap: () {
-                          if (sender != null) {
+                          if (senderProfile != null) {
                              Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => ProfileScreen(userId: sender.objectId)),
+                              MaterialPageRoute(builder: (context) => ProfileScreen(userId: senderProfile['id'].toString())),
                             );
                           }
                         },

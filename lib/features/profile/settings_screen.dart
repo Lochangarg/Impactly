@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../l10n/app_localizations.dart';
 import '../language/screens/language_selection_screen.dart';
 import 'change_password_screen.dart';
+import '../../core/services/supabase_service.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/theme_provider.dart';
 import 'account_info_screen.dart';
@@ -82,6 +83,15 @@ class SettingsScreen extends StatelessWidget {
             showArrow: false,
             onTap: () => _showLogoutDialog(context, l10n),
           ),
+          _buildSettingsTile(
+            context: context,
+            icon: Icons.delete_forever_outlined,
+            title: 'Delete Profile',
+            titleColor: Colors.red[800],
+            iconColor: Colors.red[800],
+            showArrow: false,
+            onTap: () => _showDeleteAccountDialog(context),
+          ),
         ],
       ),
     );
@@ -152,7 +162,6 @@ class SettingsScreen extends StatelessWidget {
     Color? iconColor,
     bool showArrow = true,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -192,12 +201,64 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  void _showDeleteAccountDialog(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
+    final emailController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Profile', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('This action is permanent and cannot be undone. All your data will be lost.'),
+            const SizedBox(height: 16),
+            Text('Please type your email (${user?.email}) below to confirm:'),
+            const SizedBox(height: 8),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(
+                hintText: 'your@email.com',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (emailController.text.trim() == user?.email) {
+                final success = await SupabaseService.deleteAccount();
+                if (success && context.mounted) {
+                  Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Email does not match.'), backgroundColor: Colors.red),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Delete Permanently'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showLogoutDialog(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.logout),
-        content: const Text('Are you sure you want to log out?'), // TODO: Add to l10n if needed
+        content: const Text('Are you sure you want to log out?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -205,8 +266,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () async {
-              final user = await ParseUser.currentUser() as ParseUser?;
-              await user?.logout();
+              await Supabase.instance.client.auth.signOut();
               if (context.mounted) {
                 Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
               }

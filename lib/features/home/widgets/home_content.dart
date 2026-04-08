@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'points_card.dart';
 import 'event_card.dart';
 import 'category_icon.dart';
-import '../../../core/services/parse_service.dart';
 import '../../events/event_details_screen.dart';
 import '../../../core/providers/event_provider.dart';
 import '../../leaderboard/leaderboard_screen.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/services/translation_service.dart';
+import '../../../core/services/supabase_service.dart';
 import '../../chat/direct_messages_screen.dart';
 import '../notifications_screen.dart';
 
@@ -31,22 +31,25 @@ class _HomeContentState extends State<HomeContent> {
     _homeData = _fetchHomeData();
   }
 
-   Future<Map<String, dynamic>> _fetchHomeData() async {
-    final user = await ParseService.getCurrentUser();
-    final events = await ParseService.fetchEvents();
+  Future<Map<String, dynamic>> _fetchHomeData() async {
+    final me = Supabase.instance.client.auth.currentUser;
+    if (me == null) return {'user': null, 'events': []};
+    
+    final user = await SupabaseService.fetchUserDetails(me.id);
+    final events = await SupabaseService.fetchEvents();
     
     // Auto-translate titles if Hindi
     final locale = Localizations.maybeLocaleOf(context)?.toString() ?? 'en';
     if (locale == 'hi') {
       for (var e in events) {
-        final title = e.get<String>('title') ?? '';
-        final location = e.get<String>('location') ?? '';
+        final title = e['title'] ?? '';
+        final location = e['location'] ?? '';
         
         final translatedTitle = await TranslationService.translate(title, 'hi');
         final translatedLocation = await TranslationService.translate(location, 'hi');
         
-        e.set('title', translatedTitle);
-        e.set('location', translatedLocation);
+        e['title'] = translatedTitle;
+        e['location'] = translatedLocation;
       }
     }
 
@@ -65,8 +68,8 @@ class _HomeContentState extends State<HomeContent> {
           return const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)));
         }
 
-        final user = snapshot.data?['user'] as ParseUser?;
-        final events = snapshot.data?['events'] as List<ParseObject>? ?? [];
+        final user = snapshot.data?['user'] as Map<String, dynamic>?;
+        final events = snapshot.data?['events'] as List<Map<String, dynamic>>? ?? [];
         
         return SafeArea(
           child: RefreshIndicator(
@@ -77,14 +80,14 @@ class _HomeContentState extends State<HomeContent> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Welcome Banner
-                  _buildBanner(user?.get<String>('fullName') ?? 'User', l10n),
+                   // Welcome Banner
+                  _buildBanner(user?['full_name'] ?? 'User', l10n),
                   const SizedBox(height: 32),
 
                   // Points Card
                   GestureDetector(
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const LeaderboardScreen())),
-                    child: PointsCard(points: user?.get<int>('points') ?? 0, level: user?.get<int>('level') ?? 1),
+                    child: PointsCard(points: user?['points'] ?? 0, level: user?['level'] ?? 1),
                   ),
                   const SizedBox(height: 40),
 
@@ -123,17 +126,20 @@ class _HomeContentState extends State<HomeContent> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: events.map((e) {
-                          final date = e.get<DateTime>('date');
+                          final dateStr = e['date'];
+                          final date = dateStr != null ? DateTime.parse(dateStr) : null;
+                          final eventId = e['id'].toString();
+                          
                           return GestureDetector(
-                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => EventDetailsScreen(eventId: e.objectId!))),
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => EventDetailsScreen(eventId: eventId))),
                             child: EventCard(
-                              title: e.get<String>('title') ?? 'Untitled',
+                              title: e['title'] ?? 'Untitled',
                               date: date != null ? DateFormat('MMM d, hh:mm a', Localizations.localeOf(context).toString()).format(date) : l10n.no_date,
-                              location: e.get<String>('location') ?? 'Virtual',
+                              location: e['location'] ?? 'Virtual',
                               imageUrl: '',
-                              isOwner: e.get<ParseObject>('createdBy')?.objectId == user?.objectId,
-                              isJoined: eventProvider.isUserJoined(e.objectId),
-                              onJoin: () => eventProvider.joinEvent(e),
+                              isOwner: e['created_by'] == user?['id'],
+                              isJoined: eventProvider.isUserJoined(eventId),
+                              onJoin: () => eventProvider.joinEvent(eventId, e['points'] ?? 0),
                             ),
                           );
                         }).toList(),
