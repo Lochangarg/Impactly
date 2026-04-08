@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -16,21 +16,20 @@ import 'core/providers/theme_provider.dart';
 import 'core/services/update_service.dart';
 import 'features/home/widgets/update_dialog.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Load environment variables
   await dotenv.load(fileName: ".env");
 
-  await Parse().initialize(
-    Env.appId,
-    Env.serverUrl,
-    clientKey: Env.clientKey,
-    autoSendSessionId: true,
+  await Supabase.initialize(
+    url: Env.supabaseUrl,
+    anonKey: Env.supabaseAnonKey,
   );
 
-  final currentUser = await ParseUser.currentUser() as ParseUser?;
-  final bool isLoggedIn = currentUser != null;
+  final bool isLoggedIn = Supabase.instance.client.auth.currentSession != null;
 
   runApp(
     MultiProvider(
@@ -58,6 +57,18 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _checkUpdate();
+    
+    // Listen to Auth State Changes (Handles Recovery Links)
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final AuthChangeEvent event = data.event;
+      if (event == AuthChangeEvent.passwordRecovery) {
+        // Redirection must happen after the frame to ensure navigator is ready
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          navigatorKey.currentState?.pushNamedAndRemoveUntil(AppRoutes.resetPassword, (route) => false);
+        });
+      }
+    });
+
     if (widget.isLoggedIn) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.read<EventProvider>().loadJoinedEvents();
@@ -83,6 +94,7 @@ class _MyAppState extends State<MyApp> {
       builder: (context, localeProvider, themeProvider, _) {
         return MaterialApp(
           title: 'Impactly',
+          navigatorKey: navigatorKey,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
