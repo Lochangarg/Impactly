@@ -11,8 +11,9 @@ dependencies:
     sdk: flutter
 
   intl: ^0.20.2
-  parse_server_sdk_flutter: ^10.7.0
+  supabase_flutter: ^2.6.0
   image_picker: ^1.1.2
+  image_cropper: ^8.0.2
   cached_network_image: ^3.4.1
   provider: ^6.1.2
   flutter_dotenv: ^5.2.1

@@ -533,7 +533,7 @@ abstract class AppLocalizations {
   /// No description provided for @search_users.
   ///
   /// In en, this message translates to:
-  /// **'Search Users'**
+  /// **'Search'**
   String get search_users;
 
   /// No description provided for @add_friend.

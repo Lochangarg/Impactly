@@ -228,7 +228,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get follow_causes => 'Follow some causes to see their updates!';
 
   @override
-  String get search_users => 'Search Users';
+  String get search_users => 'Search';
 
   @override
   String get add_friend => 'Add Friend';

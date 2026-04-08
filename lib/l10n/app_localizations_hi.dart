@@ -230,7 +230,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'उनके अपडेट देखने के लिए कुछ कारणों का पालन करें!';
 
   @override
-  String get search_users => 'उपयोगकर्ताओं को खोजें';
+  String get search_users => 'खोजें';
 
   @override
   String get add_friend => 'दोस्त जोड़ें';
