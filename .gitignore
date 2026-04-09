@@ -74,6 +74,7 @@ build_output.txt
 # Rubric-required exclusions
 .gradle/
 node_modules/
+null/
 
 # Ignore academic reports and scripts within /docs
 docs/*.docx
@@ -85,6 +86,6 @@ docs/BCS4601*.pdf
 !docs/MiroDesign application.pdf
 !docs/DATABASE.md
 !docs/SUPABASE_MIGRATION_PLAN.md
-!docs/MESSAGING_SCHEMA_FIX.sql
-!docs/Commands I Runned On Supabase SQL CLI.md
+!docs/Impactly_Project_Report.md
+
 
