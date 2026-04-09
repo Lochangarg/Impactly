@@ -7,7 +7,7 @@
     A gamified social-impact mobile platform that connects volunteers with causes that matter.
   </p>
   <p align="center">
-    <img src="https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter"/>
+    <img src="https://img.shields.io/badge/Flutter-3.41.6-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter"/>
     <img src="https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart"/>
     <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase"/>
     <img src="https://img.shields.io/badge/Provider-7952B3?style=for-the-badge" alt="Provider"/>
@@ -34,10 +34,10 @@ Despite growing awareness of social responsibility among youth, a significant di
 
 | Name | Student ID | Role | Key Responsibilities |
 |:-----|:-----------|:-----|:---------------------|
-| **Parikshit Kurel** | PU02424EUG10010 | Project Lead & Full-Stack Developer | Architecture design, Flutter development, Supabase integration, state management, deployment |
-| **Lochan Garg** | PU02424EUG10018 | UI/UX Designer & Frontend Developer | Wireframing (Miro), visual design, user research, screen implementation, usability testing |
+| **Parikshit Kurel** | PU02424EUG10010 | Full-Stack Developer & Technical Lead | System architecture, Supabase integration, authentication, event management & deployment |
+| **Lochan Garg** | PU02424EUG10018 | Full-Stack Developer & Design Lead | User research, Miro wireframing, community feed implementation, sociometric features & QA testing |
 
-> **Collaborative Note:** Both team members worked closely across all phases of the project — from research and design to development, testing, and documentation. While roles above reflect primary ownership areas, all code, design decisions, and documentation were produced through pair programming and collaborative review.
+> **Collaborative Note:** Both team members worked equally across all phases of the project — from research and design to development, testing, and documentation. While roles above reflect primary coordination areas, all code, design decisions, and documentation were produced through pair programming and collaborative review.
 
 ---
 
@@ -73,15 +73,13 @@ Despite growing awareness of social responsibility among youth, a significant di
   <em>Leaderboard &nbsp;·&nbsp; Profile &nbsp;·&nbsp; Direct Messages</em>
 </p>
 
-> **Note:** Place your `.png` screenshots in `assets/screenshots/` before pushing.
-
 ---
 
 ## 🛠️ Tech Stack
 
 | Layer | Technology | Version | Purpose |
 |:------|:-----------|:--------|:--------|
-| **Framework** | Flutter | 3.x | Cross-platform mobile UI |
+| **Framework** | Flutter | 3.41.6 | Cross-platform mobile UI |
 | **Language** | Dart | ≥ 3.0.0 | Primary programming language |
 | **Backend** | Supabase | Cloud | Auth, PostgreSQL database, Storage, Realtime |
 | **State Management** | Provider | 6.1.2 | Reactive state with `ChangeNotifier` |
@@ -100,7 +98,7 @@ Despite growing awareness of social responsibility among youth, a significant di
 
 ## 🚀 Setup & Run Instructions
 
-> Tested on a clean Windows 11 machine with Flutter 3.x.
+> Tested on a clean Windows 11 machine with Flutter 3.41.6.
 
 ### Prerequisites
 
@@ -197,10 +195,10 @@ Impactly/
 │   └── main.dart                      # Entry point & Supabase initialisation
 │
 ├── docs/                              # Design assets & technical documentation
+│   ├── Impactly_Project_Report.md     #   → Comprehensive academic project report
 │   ├── MiroDesign application.pdf     #   → Wireframes & high-fidelity mockups
 │   ├── DATABASE.md                    #   → Full database schema documentation
-│   ├── SUPABASE_MIGRATION_PLAN.md     #   → SQL migration reference
-│   └── MESSAGING_SCHEMA_FIX.sql       #   → Messaging table fix
+│   └── SUPABASE_MIGRATION_PLAN.md     #   → SQL migration reference
 │
 ├── assets/                            # App icons, screenshots, images
 │   ├── icons/                         #   → App icon (Impactly_app_icon.png)
