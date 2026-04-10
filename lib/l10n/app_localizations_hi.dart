@@ -202,7 +202,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get event_not_found => 'इवेंट नहीं मिला';
 
   @override
-  String get joined_successfully => 'सफलतापूर्वक शामिल हुए! 🚀';
+  String get joined_successfully => 'सफलतापूर्वक शामिल हुए!';
 
   @override
   String get no_date => 'कोई तारीख नहीं';

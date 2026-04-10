@@ -28,6 +28,7 @@ class _SignupScreenState extends State<SignupScreen> {
   
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _isPrivate = false;
 
   @override
   void dispose() {
@@ -84,6 +85,7 @@ class _SignupScreenState extends State<SignupScreen> {
             'username': username,
             'phone': phone,
             'city': location,
+            'is_private': _isPrivate,
           }
         );
 
@@ -300,7 +302,25 @@ class _SignupScreenState extends State<SignupScreen> {
                   },
                 ),
                 
-                const SizedBox(height: 48),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5)),
+                  ),
+                  child: SwitchListTile(
+                    title: const Text('Private Account', style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: const Text('Hide your posts from people you don\'t know'),
+                    value: _isPrivate,
+                    activeColor: const Color(0xFF6366F1),
+                    onChanged: (val) => setState(() => _isPrivate = val),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                
+                const SizedBox(height: 32),
                 
                 AuthButton(
                   onPressed: _onSignup,

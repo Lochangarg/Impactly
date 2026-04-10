@@ -60,6 +60,13 @@ class _CreateEventScreenState extends State<CreatePostScreen> {
       );
 
       if (success && mounted) {
+        // Send notifications to all participants
+        SupabaseService.sendEventNotifications(
+          eventId: _selectedEvent!['id'].toString(),
+          message: 'shared an update in ${_selectedEvent!['title']}',
+          type: 'event_update',
+        ).ignore(); // Run in background
+
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.post_published), backgroundColor: Colors.green));
         Navigator.pop(context, true);
       }
@@ -109,7 +116,21 @@ class _CreateEventScreenState extends State<CreatePostScreen> {
               builder: (context, snapshot) {
                 final events = snapshot.data ?? [];
                 if (events.isEmpty && snapshot.connectionState == ConnectionState.done) {
-                  return Text(l10n.join_event_to_post, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)));
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: ElevatedButton.icon(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.explore),
+                      label: Text(l10n.join_event_to_post),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6366F1),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  );
                 }
                 
                 return Container(

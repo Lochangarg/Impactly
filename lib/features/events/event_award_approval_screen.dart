@@ -31,14 +31,14 @@ class _EventAwardApprovalScreenState extends State<EventAwardApprovalScreen> {
 
   Future<void> _processAward(Map<String, dynamic> award, bool approve) async {
     bool success;
-    final userEventId = award['id'].toString();
+    final eventId = award['event_id'].toString();
     final userId = award['user_id'].toString();
     final points = (widget.event['points'] ?? 200).toInt();
 
     if (approve) {
-       success = await SupabaseService.approveAward(userEventId, userId, points);
+       success = await SupabaseService.approveAward(eventId, userId, points);
     } else {
-       success = await SupabaseService.rejectAward(userEventId);
+       success = await SupabaseService.rejectAward(eventId, userId);
     }
 
     if (success && mounted) {
@@ -71,7 +71,7 @@ class _EventAwardApprovalScreenState extends State<EventAwardApprovalScreen> {
                       child: ListTile(
                         leading: const CircleAvatar(child: Icon(Icons.person)),
                         title: Text(profile?['full_name'] ?? 'Unknown User'),
-                        subtitle: Text('Joined on: ${award['created_at'] != null ? award['created_at'].toString().split('T')[0] : 'Unknown'}'),
+                        subtitle: Text('Joined on: ${(award['joined_at'] ?? award['created_at']) != null ? (award['joined_at'] ?? award['created_at']).toString().split('T')[0] : 'Unknown'}'),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

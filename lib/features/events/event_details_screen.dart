@@ -6,6 +6,7 @@ import '../../core/providers/event_provider.dart';
 import '../../core/services/supabase_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'event_award_approval_screen.dart';
+import 'create_event_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/services/translation_service.dart';
 
@@ -71,13 +72,19 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     setState(() => _isActionLoading = true);
     
     final int points = _event!['points'] ?? 0;
-    await context.read<EventProvider>().joinEvent(widget.eventId, points);
+    final error = await context.read<EventProvider>().joinEvent(widget.eventId, points);
     
     if (mounted) {
       setState(() => _isActionLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.joined_successfully), backgroundColor: Colors.green),
-      );
+      if (error == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.joined_successfully), backgroundColor: Colors.green),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $error'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
@@ -144,7 +151,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             tooltip: 'Toggle Translation',
             onPressed: () => setState(() => _autoTranslate = !_autoTranslate),
           ),
-          if (isOwner)
+          if (isOwner || (isJoined && !_isAwardPending))
             PopupMenuButton<String>(
               onSelected: (val) {
                 if (val == 'approvals') {
@@ -156,12 +163,18 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   _showEditEventDialog(context);
                 } else if (val == 'delete') {
                   _onDeleteEvent();
+                } else if (val == 'leave') {
+                  _onLeaveEvent();
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(value: 'approvals', child: Text('Approvals')),
-                const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+                if (isOwner) ...[
+                  const PopupMenuItem(value: 'approvals', child: Text('Approvals')),
+                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+                ],
+                if (isJoined && !_isAwardPending)
+                  const PopupMenuItem(value: 'leave', child: Text('Withdraw from Event', style: TextStyle(color: Colors.red))),
               ],
               icon: const Icon(Icons.more_vert),
             )
@@ -238,81 +251,149 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.05), blurRadius: 20, offset: const Offset(0, -5))],
-        ),
-        child: SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: (isOwner || _isAwardPending || _isActionLoading || (isOver && !isJoined)) ? null : (isJoined ? _onFinishEvent : () => _onJoinEvent(l10n)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: (isOwner || _isAwardPending || (isOver && !isJoined)) ? Theme.of(context).dividerColor : const Color(0xFF6366F1),
-              foregroundColor: (isOwner || _isAwardPending || (isOver && !isJoined)) ? Theme.of(context).colorScheme.onSurface.withOpacity(0.5) : Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-            ),
-            child: _isActionLoading 
-              ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : Text(
-                  isOwner ? l10n.your_event : (_isAwardPending ? 'Award Pending' : (isJoined ? 'Mark as Done' : (isOver ? 'Event Over' : l10n.join_event))),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
-                ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              )
+            ],
           ),
+          child: _isActionLoading 
+            ? const SizedBox(height: 56, child: Center(child: CircularProgressIndicator(color: Color(0xFF6366F1))))
+            : (isJoined && !_isAwardPending && !isOwner && !isOver)
+                ? Row(
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: OutlinedButton(
+                          onPressed: _onLeaveEvent,
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.red),
+                            foregroundColor: Colors.red,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            minimumSize: const Size.fromHeight(56),
+                          ),
+                          child: const Text('Withdraw', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: _onFinishEvent,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6366F1),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            minimumSize: const Size.fromHeight(56),
+                            elevation: 0,
+                          ),
+                          child: const Text('Mark as Done', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
+                  )
+                : SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: (isOwner || _isAwardPending || (isOver && !isJoined)) ? null : (isJoined ? _onFinishEvent : () => _onJoinEvent(l10n)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: (isOwner || _isAwardPending || (isOver && !isJoined)) ? Theme.of(context).dividerColor : const Color(0xFF6366F1),
+                        foregroundColor: (isOwner || _isAwardPending || (isOver && !isJoined)) ? Theme.of(context).colorScheme.onSurface.withOpacity(0.5) : Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        isOwner ? l10n.your_event : (_isAwardPending ? 'Award Pending' : (isJoined ? 'Mark as Done' : (isOver ? 'Event Over' : l10n.join_event))),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
         ),
       ),
     );
   }
 
   void _onDeleteEvent() async {
-    final success = await SupabaseService.deleteEvent(widget.eventId);
-    if (success && mounted) {
-      Navigator.pop(context, true);
-    }
-  }
-
-  void _showEditEventDialog(BuildContext context) {
-    // Similarly to Edit Post, implement Edit Event.
-    // For now, let's just make it simple.
-    final titleController = TextEditingController(text: _event!['title']);
-    final descController = TextEditingController(text: _event!['description']);
-    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Edit Event'),
-        content: SingleChildScrollView(
-          child: Column(
-            children: [
-              TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Title')),
-              TextField(controller: descController, decoration: const InputDecoration(labelText: 'Description'), maxLines: 3),
-            ],
-          ),
-        ),
+        title: const Text('Delete Event'),
+        content: const Text('Are you sure you want to delete this event? This action cannot be undone.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             onPressed: () async {
-              final success = await SupabaseService.updateEvent(
-                eventId: widget.eventId,
-                data: {
-                  'title': titleController.text.trim(),
-                  'description': descController.text.trim(),
-                }
-              );
+              Navigator.pop(context);
+              final success = await SupabaseService.deleteEvent(widget.eventId);
               if (success && mounted) {
-                Navigator.pop(context);
-                _loadData();
+                Navigator.pop(context, true);
               }
             },
-            child: const Text('Save'),
+            child: const Text('Delete'),
           ),
         ],
       ),
     );
+  }
+
+  void _onLeaveEvent() async {
+    if (_event == null) return;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Withdraw from Event'),
+        content: const Text('Are you sure you want to withdraw? You will not earn points for this event.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () async {
+              Navigator.pop(context);
+              setState(() => _isActionLoading = true);
+              final int points = _event!['points'] ?? 0;
+              
+              final success = await context.read<EventProvider>().leaveEvent(widget.eventId, points);
+              
+              if (mounted) {
+                setState(() => _isActionLoading = false);
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Successfully withdrawn from the event.'), backgroundColor: Colors.orange),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Failed to withdraw. Please try again.'), backgroundColor: Colors.red),
+                  );
+                }
+              }
+            },
+            child: const Text('Withdraw'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditEventDialog(BuildContext context) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreateEventScreen(event: _event),
+      ),
+    );
+    
+    if (result == true && mounted) {
+      _loadData();
+    }
   }
 
   Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {

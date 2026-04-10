@@ -1,0 +1,89 @@
+# Impactly - Demo Video Script & Recording Workflow
+
+## 🎥 Recording Workflow & Setup
+
+**1. Preparation:**
+*   **Device:** Ensure the app is running smoothly on a real device or a fast, clean emulator (rubric requires 1080p resolution minimum).
+*   **Recording Software:** Use OBS Studio, QuickTime Screen Recording, or the built-in screen recorder on your device/emulator. Ensure settings are 1080p, 30fps or 60fps.
+*   **Audio:** This is critical. Use decent microphones or headphones. Test audio levels before starting to ensure both your voices are clear and the volume is balanced. Find a very quiet room.
+*   **Data Preparation:** Have dummy data pre-loaded (e.g., active events, populated community feed, points on the leaderboard) so the app looks alive and active during the demo.
+*   **Format:** Faceless. The recording should *only* show the app screen. Do not show your cursor unless necessary, and try to hide emulator window controls.
+
+**2. Execution:**
+*   **The "Driver":** One person (perhaps Parikshit) should be the designated "driver" controlling the app on the screen. The driver must pace the navigation to align precisely with whoever is speaking. Don't rush through screens; give the viewer time to absorb the UI while the other person narrates.
+*   **Honesty over Editing:** The rubric explicitly states: "Do not edit the video to hide loading errors or crashes — if a feature is unstable, narrate around it honestly." If something takes a second to load, just say, "As you can see, the feed is loading the latest data..."
+
+**3. Submission:**
+*   Export as MP4.
+*   Upload to YouTube as **Unlisted** (or Public, but not Private).
+*   Ensure the final URL is added to your README.md and submitted via your LMS.
+
+---
+
+## 📝 Video Script (Target: 5-8 minutes)
+
+#### Segment 1: Team Introduction (0:00 - 0:45)
+*(Screen shows the Impactly Splash Screen or the Login Screen)*
+
+**Parikshit:** Hello everyone. We are presenting our project, Impactly. I'm Parikshit Kurel, the Technical Lead and Full-Stack Developer. 
+
+**Lochan:** And I'm Lochan Garg, the Design Lead and Full-Stack Developer. Our application, Impactly, is a gamified social-impact mobile platform designed to connect university students with meaningful volunteer opportunities.
+
+#### Segment 2: Problem & Motivation (0:45 - 1:30)
+*(Parikshit drives: The app slowly transitions to the Home Dashboard during this segment)*
+
+**Lochan:** The core problem we are solving is the disconnect between a student's desire to volunteer and their ability to actually do it. In our initial survey of 20 students, 95% stated they had missed out on volunteer opportunities simply due to a lack of awareness or centralized information.
+
+**Parikshit:** Information regarding social work is fragmented, and there's rarely an immediate incentive to participate. Impactly solves this by centralizing event discovery and introducing gamification. By rewarding participation with 'Impact Points' and levels, we make volunteering both accessible and engaging for our demographic.
+
+#### Segment 3: Full App Walkthrough (1:30 - 5:30)
+
+**[Auth & Onboarding]**
+*(Parikshit drives: If logged in, logs out to show the login screen briefly, then logs back in)*
+**Parikshit:** Let's walk through the core user flows. We built a native login and registration system using Supabase Auth. Because accessibility is important, we also included bilingual support right from the start, allowing users to toggle between English and Hindi. We'll proceed with English for this demo.
+
+**[Home & Event Discovery]**
+*(Parikshit drives: Arrives at Home, navigates to the Events tab)*
+**Lochan:** Once logged in, users land on the Home Dashboard for a quick overview. The core function of Impactly is Event Discovery. Users can browse events by categories like Education, Environment, or Animal Welfare. Let's look at this upcoming tree-planting event. 
+
+*(Parikshit drives: Taps an event, shows the details screen, and clicks the 'Join' button)*
+**Lochan:** The details screen provides necessary context. Joining is a seamless, single-tap experience. Notice that upon joining, the user is immediately awarded 'Impact Points'. This demonstrates our core gamification loop in action.
+
+**[Community Feed]**
+*(Parikshit drives: Navigates to the Feed tab)*
+**Lochan:** Next is our Community Feed. This is where users share their volunteer experiences. It's designed to build social proof and trust within the community.
+*(Parikshit drives: Scrolls slightly, likes a post, opens the comment section)*
+**Lochan:** Users can publish posts with images, like content, and leave comments. It functions like a familiar social network but is entirely dedicated to social good and positive reinforcement.
+
+**[Social & Messaging]**
+*(Parikshit drives: Shows searching for users via the search bar, then navigates to Direct Messages)*
+**Parikshit:** Recognizing that volunteering is inherently social, we implemented a direct messaging feature. Users can search for other volunteers, send friend requests, and chat directly to coordinate their activities. This entire messaging system is powered by Supabase Realtime for instant, low-latency delivery.
+
+**[Profile & Leaderboard]**
+*(Parikshit drives: Navigates to the Profile tab, shows stats, then goes to the Leaderboard)*
+**Parikshit:** Finally, the Profile screen tracks a user's total impact, showing their stats and current level. These points funnel directly into our Global Leaderboard. By allowing users to see where they stand against their peers, we drive healthy competition and sustained platform engagement.
+
+#### Segment 4: Design Decisions (5:30 - 6:30)
+*(Parikshit drives: Navigates back to the Home or Feed screen and lets it rest there)*
+
+**Lochan:** Moving on to our design decisions. First, we opted for a deep, immersive 'Dark Mode' as our default theme. During our usability testing and based on our design principles, we found that this darker palette felt significantly more premium and modern to university students compared to standard white interfaces. 
+
+Secondly, we implemented a card-based layout in the Community Feed. Our survey indicated that our target audience is highly accustomed to platforms like Instagram or Twitter. By adopting a similar visual language—such as edge-to-edge images and prominently displayed interaction buttons—we drastically reduced the learning curve, making the app feel intuitive upon first launch.
+
+#### Segment 5: Technical Overview (6:30 - 7:30)
+*(Parikshit drives: Can slowly scroll the feed or remain static)*
+
+**Parikshit:** On the technical side, Impactly is built with Flutter version 3.41 to achieve a seamless cross-platform mobile UI, using Dart as our primary language. For state management across the app, we utilize the Provider package. 
+
+For the backend infrastructure, we rely entirely on Supabase, which provides our PostgreSQL database, Authentication, and Storage solutions. 
+
+One interesting implementation challenge we faced was with the Direct Messaging system. Initially, we experienced issues with duplicate messages rendering or noticeable delays when sending. We solved this by refining our Supabase Realtime subscription queries and ensuring that the Provider updated the UI's local state optimistically *before* confirming the backend write. This resulted in a much smoother, instantaneous chat experience.
+
+#### Segment 6: Reflection & Next Steps (7:30 - 8:00)
+
+**Lochan:** To wrap up, we are very proud of the foundation we've built with Impactly, though we acknowledge its current limitations. For instance, right now, our event locations are implemented simply as text fields.
+
+**Parikshit:** If we had additional time, our immediate next step would be integrating a Maps API to visualize these events on an interactive, geographical map. We would also prioritize building an robust offline caching mode to allow users to view their events and the feed even with intermittent network connectivity. 
+
+**Lochan:** Thank you for watching our demonstration of Impactly. 
+*(Parikshit stops the screen recording)*

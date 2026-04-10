@@ -101,7 +101,7 @@ class PointsCard extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.auto_awesome,
+              Icons.emoji_events_outlined,
               color: Colors.white,
               size: 40,
             ),

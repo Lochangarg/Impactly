@@ -7,7 +7,8 @@ import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 
 class CreateEventScreen extends StatefulWidget {
-  const CreateEventScreen({super.key});
+  final Map<String, dynamic>? event;
+  const CreateEventScreen({super.key, this.event});
 
   @override
   State<CreateEventScreen> createState() => _CreateEventScreenState();
@@ -21,12 +22,32 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final _pointsController = TextEditingController();
   String _selectedCategory = 'Cleaning';
   DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
   bool _isLoading = false;
   Uint8List? _imageBytes;
   String? _fileExt;
   final _picker = ImagePicker();
 
   final List<String> _categories = ['Cleaning', 'Workshops', 'Volunteering', 'Music', 'Social'];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.event != null) {
+      _titleController.text = widget.event!['title'] ?? '';
+      _descriptionController.text = widget.event!['description'] ?? '';
+      _locationController.text = widget.event!['location'] ?? '';
+      _pointsController.text = (widget.event!['points'] ?? 0).toString();
+      _selectedCategory = widget.event!['category'] ?? 'Cleaning';
+      
+      final dateVal = widget.event!['date'];
+      if (dateVal != null) {
+        final dt = DateTime.parse(dateVal);
+        _selectedDate = dt;
+        _selectedTime = TimeOfDay.fromDateTime(dt);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -40,8 +61,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime(2101),
       builder: (context, child) {
         return Theme(
@@ -55,9 +76,21 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         );
       },
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null) {
       setState(() {
         _selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime ?? TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedTime = picked;
       });
     }
   }
@@ -73,11 +106,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     }
   }
 
-  Future<void> _createEvent() async {
-    if (!_formKey.currentState!.validate() || _selectedDate == null) {
-      if (_selectedDate == null) {
+  Future<void> _submitEvent() async {
+    if (!_formKey.currentState!.validate() || _selectedDate == null || _selectedTime == null) {
+      if (_selectedDate == null || _selectedTime == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a date')),
+          const SnackBar(content: Text('Please select both date and time')),
         );
       }
       return;
@@ -86,21 +119,65 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final success = await SupabaseService.createEvent(
-        title: _titleController.text.trim(),
-        description: _descriptionController.text.trim(),
-        location: _locationController.text.trim(),
-        category: _selectedCategory,
-        points: int.parse(_pointsController.text.trim()),
-        date: _selectedDate!,
-        imageBytes: _imageBytes,
-        fileExt: _fileExt,
+      final finalDateTime = DateTime(
+        _selectedDate!.year,
+        _selectedDate!.month,
+        _selectedDate!.day,
+        _selectedTime!.hour,
+        _selectedTime!.minute,
       );
 
+      bool success = false;
+      if (widget.event != null) {
+        // Update
+        success = await SupabaseService.updateEvent(
+          eventId: widget.event!['id'],
+          data: {
+            'title': _titleController.text.trim(),
+            'description': _descriptionController.text.trim(),
+            'location': _locationController.text.trim(),
+            'category': _selectedCategory,
+            'points': int.parse(_pointsController.text.trim()),
+            'date': finalDateTime.toIso8601String(),
+          },
+          imageBytes: _imageBytes,
+          fileExt: _fileExt,
+        );
+      } else {
+        // Create
+        success = await SupabaseService.createEvent(
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          location: _locationController.text.trim(),
+          category: _selectedCategory,
+          points: int.parse(_pointsController.text.trim()),
+          date: finalDateTime,
+          imageBytes: _imageBytes,
+          fileExt: _fileExt,
+        );
+
+        if (success) {
+          // Broadcast to all users
+          SupabaseService.broadcastNotification(
+            message: 'A new event "${_titleController.text.trim()}" has been created.',
+            type: 'new_event',
+          ).ignore();
+        }
+      }
+
       if (success && mounted) {
+        if (widget.event != null) {
+          // Notify participants about the edit
+          SupabaseService.sendEventNotifications(
+            eventId: widget.event!['id'],
+            message: 'updated the details for ${widget.event!['title']}',
+            type: 'event_modified',
+          ).ignore();
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Event Created 🎉'),
+          SnackBar(
+            content: Text(widget.event != null ? 'Event Updated' : 'Event Created 🎉'),
             backgroundColor: Colors.green,
           ),
         );
@@ -129,7 +206,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(l10n.create_new_event, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(widget.event != null ? 'Edit Event' : l10n.create_new_event, style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -158,9 +235,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       borderRadius: BorderRadius.circular(16),
                       image: _imageBytes != null 
                         ? DecorationImage(image: MemoryImage(_imageBytes!), fit: BoxFit.cover)
-                        : null,
+                        : (widget.event?['image_url'] != null ? DecorationImage(image: NetworkImage(widget.event!['image_url']), fit: BoxFit.cover) : null),
                     ),
-                    child: _imageBytes == null 
+                    child: (_imageBytes == null && widget.event?['image_url'] == null)
                       ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -236,31 +313,76 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ),
                 
                 const SizedBox(height: 20),
-                _buildLabel(l10n.event_date),
-                InkWell(
-                  onTap: () => _selectDate(context),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.calendar_today, size: 20, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
-                        const SizedBox(width: 12),
-                        Text(
-                          _selectedDate == null 
-                            ? l10n.select_date 
-                            : DateFormat('MMM d, yyyy').format(_selectedDate!),
-                          style: TextStyle(
-                            color: _selectedDate == null ? Theme.of(context).colorScheme.onSurface.withOpacity(0.4) : Theme.of(context).colorScheme.onSurface,
-                            fontSize: 14,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildLabel(l10n.event_date),
+                          InkWell(
+                            onTap: () => _selectDate(context),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.calendar_today, size: 20, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    _selectedDate == null 
+                                      ? l10n.select_date 
+                                      : DateFormat('MMM d, yyyy').format(_selectedDate!),
+                                    style: TextStyle(
+                                      color: _selectedDate == null ? Theme.of(context).colorScheme.onSurface.withOpacity(0.4) : Theme.of(context).colorScheme.onSurface,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildLabel('Event Time'),
+                          InkWell(
+                            onTap: () => _selectTime(context),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.access_time, size: 20, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    _selectedTime == null 
+                                      ? 'Select Time'
+                                      : _selectedTime!.format(context),
+                                    style: TextStyle(
+                                      color: _selectedTime == null ? Theme.of(context).colorScheme.onSurface.withOpacity(0.4) : Theme.of(context).colorScheme.onSurface,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 
                 const SizedBox(height: 40),
@@ -268,7 +390,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _createEvent,
+                    onPressed: _isLoading ? null : _submitEvent,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF6366F1),
                       foregroundColor: Colors.white,
@@ -277,7 +399,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     ),
                     child: _isLoading 
                       ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text(l10n.create_event, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      : Text(widget.event != null ? 'Save Changes' : l10n.create_event, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],

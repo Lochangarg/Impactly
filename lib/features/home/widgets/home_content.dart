@@ -37,6 +37,7 @@ class _HomeContentState extends State<HomeContent> {
     
     final user = await SupabaseService.fetchUserDetails(me.id);
     final events = await SupabaseService.fetchEvents();
+    final notifications = await SupabaseService.fetchNotifications(onlyPending: true);
     
     // Auto-translate titles if Hindi
     final locale = Localizations.maybeLocaleOf(context)?.toString() ?? 'en';
@@ -53,7 +54,11 @@ class _HomeContentState extends State<HomeContent> {
       }
     }
 
-    return {'user': user, 'events': events};
+    return {
+      'user': user, 
+      'events': events, 
+      'hasNotifications': notifications.isNotEmpty
+    };
   }
 
   @override
@@ -81,7 +86,7 @@ class _HomeContentState extends State<HomeContent> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                    // Welcome Banner
-                  _buildBanner(user?['full_name'] ?? 'User', l10n),
+                  _buildBanner(user?['full_name'] ?? 'User', l10n, snapshot.data?['hasNotifications'] ?? false),
                   const SizedBox(height: 32),
 
                   // Points Card
@@ -155,7 +160,7 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
-  Widget _buildBanner(String name, AppLocalizations l10n) {
+  Widget _buildBanner(String name, AppLocalizations l10n, bool hasNotifications) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -171,14 +176,18 @@ class _HomeContentState extends State<HomeContent> {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const DirectMessagesScreen()));
               },
             ),
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const NotificationsScreen()),
-                );
-              },
+            Badge(
+              isLabelVisible: hasNotifications,
+              backgroundColor: Colors.red,
+              child: IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                  ).then((_) => setState(() => _homeData = _fetchHomeData()));
+                },
+              ),
             ),
           ],
         ),

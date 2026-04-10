@@ -29,40 +29,49 @@ class EventProvider extends ChangeNotifier {
     return joinedEventIds.contains(eventId);
   }
 
-  Future<void> joinEvent(String eventId, int points) async {
+  Future<String?> joinEvent(String eventId, int points) async {
     final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    if (user == null) return "User is not logged in";
 
-    if (joinedEventIds.contains(eventId)) return;
+    if (joinedEventIds.contains(eventId)) return null;
 
-    final success = await SupabaseService.joinEvent(eventId);
-
-    if (success) {
-      // Award Points
-      try {
-        final profileResp = await Supabase.instance.client
-            .from('profiles')
-            .select('points')
-            .eq('id', user.id)
-            .single();
-        
-        final currentPoints = profileResp['points'] as int? ?? 0;
-        final newPoints = currentPoints + points;
-        final newLevel = (newPoints / 100).floor() + 1;
-        
-        await SupabaseService.updateProfile(
-          userId: user.id,
-          data: {
-            'points': newPoints,
-            'level': newLevel,
-          },
-        );
-
-        joinedEventIds.add(eventId);
-        notifyListeners();
-      } catch (e) {
-        debugPrint('Error awarding points: $e');
+    try {
+      await Supabase.instance.client.from('user_events').insert({
+        'user_id': user.id,
+        'event_id': eventId,
+        'status': 'award_pending',
+      });
+    } catch (e) {
+      // Handle the case where user is already joined in the database
+      if (e is PostgrestException && e.code == '23505') {
+        // Just continue, we'll sync the state below
+      } else {
+        return e.toString();
       }
     }
+
+    joinedEventIds.add(eventId);
+    notifyListeners();
+
+    // Points are no longer awarded automatically upon joining.
+    // They must be manually awarded by the Host later.
+    return null;
+  }
+
+  Future<bool> leaveEvent(String eventId, int points) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return false;
+
+    final success = await SupabaseService.leaveEvent(eventId);
+
+    if (success) {
+      joinedEventIds.remove(eventId);
+      notifyListeners();
+
+      // Points are no longer deducted automatically if leaving,
+      // as they were not awarded automatically.
+      return true;
+    }
+    return false;
   }
 }

@@ -479,7 +479,7 @@ abstract class AppLocalizations {
   /// No description provided for @joined_successfully.
   ///
   /// In en, this message translates to:
-  /// **'Joined successfully! 🚀'**
+  /// **'Joined successfully!'**
   String get joined_successfully;
 
   /// No description provided for @no_date.

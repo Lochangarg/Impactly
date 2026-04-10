@@ -159,6 +159,14 @@ class SupabaseService {
     if (user == null) return false;
 
     try {
+      // Notify participants before deletion
+      final event = await client.from('events').select('title').eq('id', eventId).single();
+      await sendEventNotifications(
+        eventId: eventId,
+        message: 'The event "${event['title']}" has been cancelled.',
+        type: 'event_cancelled',
+      );
+
       await client.from('events').delete().eq('id', eventId).eq('created_by', user.id);
       return true;
     } catch (e) {
@@ -196,10 +204,27 @@ class SupabaseService {
       await client.from('user_events').insert({
         'user_id': user.id,
         'event_id': eventId,
-        'status': 'joined'
+        'status': 'award_pending',
       });
       return true;
     } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> leaveEvent(String eventId) async {
+    final user = currentUser;
+    if (user == null) return false;
+
+    try {
+      await client
+          .from('user_events')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('event_id', eventId);
+      return true;
+    } catch (e) {
+      debugPrint('Error leaving event: $e');
       return false;
     }
   }
@@ -228,6 +253,18 @@ class SupabaseService {
         .select('*, profiles:created_by(*), events(*)')
         .order('created_at', ascending: false);
     return List<Map<String, dynamic>>.from(response);
+  }
+
+  static Future<void> clearAllNotifications() async {
+    final user = currentUser;
+    if (user == null) return;
+    await client.from('notifications').delete().eq('receiver_id', user.id);
+  }
+
+  static Future<void> markAllNotificationsAsRead() async {
+    final user = currentUser;
+    if (user == null) return;
+    await client.from('notifications').update({'status': 'read'}).eq('receiver_id', user.id).eq('status', 'pending');
   }
 
   static Future<bool> createPost({
@@ -355,28 +392,111 @@ class SupabaseService {
   }
 
   // --- NOTIFICATIONS ---
-  static Future<List<Map<String, dynamic>>> fetchNotifications() async {
+  static Future<List<Map<String, dynamic>>> fetchNotifications({bool onlyPending = false}) async {
     final user = currentUser;
     if (user == null) return [];
-    
-    final response = await client
+
+    var query = client
         .from('notifications')
-        .select('*, profiles:sender_id(*)')
-        .eq('receiver_id', user.id)
-        .order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(response);
+        .select('*, profiles:sender_id(full_name, profile_picture)')
+        .eq('receiver_id', user.id);
+    
+    if (onlyPending) {
+      query = query.eq('status', 'pending');
+    }
+    
+    final response = await query.order('created_at', ascending: false);
+    
+    // Deduplicate friend requests from the same user to avoid UI spam
+    final List<Map<String, dynamic>> deduped = [];
+    final Set<String> seenRequests = {};
+    
+    for (var notif in List<Map<String, dynamic>>.from(response)) {
+      if (notif['type'] == 'friend_request') {
+        final key = '${notif['sender_id']}_friend_request';
+        if (seenRequests.contains(key)) continue;
+        seenRequests.add(key);
+      }
+      deduped.add(notif);
+    }
+    
+    return deduped;
   }
 
-  static Future<bool> respondToFriendRequest(String notificationId, bool accept) async {
+  static Future<void> sendEventNotifications({
+    required String eventId,
+    required String message,
+    required String type,
+  }) async {
+    final user = currentUser;
+    if (user == null) return;
+
     try {
-      await client.from('notifications').update({
-        'status': accept ? 'accepted' : 'declined'
-      }).eq('id', notificationId);
-      return true;
+      // 1. Fetch all users who have joined this event
+      final participants = await client
+          .from('user_events')
+          .select('user_id')
+          .eq('event_id', eventId);
+      
+      if (participants == null || (participants as List).isEmpty) return;
+
+      final Set<String> receiverIds = (participants as List)
+          .map<String>((p) => p['user_id'].toString())
+          .toSet();
+      
+      // Don't notify the person who made the update
+      receiverIds.remove(user.id);
+
+      if (receiverIds.isEmpty) return;
+
+      // 2. Insert notifications for all participants
+      final List<Map<String, dynamic>> notifications = receiverIds.map((id) => {
+        'receiver_id': id,
+        'sender_id': user.id,
+        'event_id': eventId,
+        'type': type,
+        'message': message,
+      }).toList();
+
+      await client.from('notifications').insert(notifications);
     } catch (e) {
-      return false;
+      debugPrint('Error sending event notifications: $e');
     }
   }
+
+  static Future<void> broadcastNotification({
+    required String message,
+    required String type,
+    String? eventId,
+  }) async {
+    final user = currentUser;
+    if (user == null) return;
+
+    try {
+      // Fetch all user IDs except the sender
+      final profiles = await client.from('profiles').select('id');
+      final List<String> userIds = (profiles as List)
+          .map<String>((p) => p['id'].toString())
+          .where((id) => id != user.id)
+          .toList();
+
+      if (userIds.isEmpty) return;
+
+      final List<Map<String, dynamic>> notifications = userIds.map((id) => {
+        'receiver_id': id,
+        'sender_id': user.id,
+        'type': type,
+        'message': message,
+        'event_id': eventId,
+      }).toList();
+
+      await client.from('notifications').insert(notifications);
+    } catch (e) {
+      debugPrint('Error broadcasting notification: $e');
+    }
+  }
+
+
 
   // --- CHAT ---
   static Stream<List<Map<String, dynamic>>> streamMessages(String otherUserId) {
@@ -448,9 +568,9 @@ class SupabaseService {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  static Future<bool> approveAward(String userEventId, String userId, int points) async {
+  static Future<bool> approveAward(String eventId, String userId, int points) async {
     try {
-      await client.from('user_events').update({'status': 'approved'}).eq('id', userEventId);
+      await client.from('user_events').update({'status': 'approved'}).eq('event_id', eventId).eq('user_id', userId);
       final profile = await fetchUserDetails(userId);
       final currentPoints = profile?['points'] ?? 0;
       await updateProfile(userId: userId, data: {'points': currentPoints + points});
@@ -460,9 +580,9 @@ class SupabaseService {
     }
   }
 
-  static Future<bool> rejectAward(String userEventId) async {
+  static Future<bool> rejectAward(String eventId, String userId) async {
     try {
-      await client.from('user_events').update({'status': 'rejected'}).eq('id', userEventId);
+      await client.from('user_events').update({'status': 'rejected'}).eq('event_id', eventId).eq('user_id', userId);
       return true;
     } catch (e) {
       return false;
@@ -524,42 +644,105 @@ class SupabaseService {
     }
   }
 
+  static Future<String> checkFriendshipStatus(String otherUserId) async {
+    final myId = currentUser?.id;
+    if (myId == null || myId == otherUserId) return 'None';
+
+    try {
+      final friendship = await client
+          .from('friends')
+          .select()
+          .eq('user_id', myId)
+          .eq('friend_id', otherUserId)
+          .limit(1);
+      if ((friendship as List).isNotEmpty) return 'Friends';
+
+      final sentRequest = await client
+          .from('notifications')
+          .select()
+          .eq('sender_id', myId)
+          .eq('receiver_id', otherUserId)
+          .eq('type', 'friend_request')
+          .eq('status', 'pending')
+          .limit(1);
+      if ((sentRequest as List).isNotEmpty) return 'PendingSent';
+
+      final receivedRequest = await client
+          .from('notifications')
+          .select()
+          .eq('sender_id', otherUserId)
+          .eq('receiver_id', myId)
+          .eq('type', 'friend_request')
+          .eq('status', 'pending')
+          .limit(1);
+      if ((receivedRequest as List).isNotEmpty) return 'PendingReceived';
+
+      return 'None';
+    } catch (e) {
+      return 'None';
+    }
+  }
+
   static Future<bool> toggleFriend(String friendId) async {
     final myId = currentUser?.id;
     if (myId == null) return false;
 
     try {
-      final existing = await client
-          .from('friends')
-          .select()
-          .eq('user_id', myId)
-          .eq('friend_id', friendId)
-          .maybeSingle();
+      final status = await checkFriendshipStatus(friendId);
+      if (status == 'Friends') {
+        await client.from('friends').delete().eq('user_id', myId).eq('friend_id', friendId);
+        await client.from('friends').delete().eq('user_id', friendId).eq('friend_id', myId);
+        return true;
+      } else if (status == 'None') {
+        try {
+          await client.from('notifications').insert({
+            'receiver_id': friendId,
+            'sender_id': myId,
+            'type': 'friend_request',
+            'message': 'sent you a friend request.',
+            'status': 'pending',
+          });
+        } catch (e) {
+          // Fallback if 'status' column is missing in the DB
+          await client.from('notifications').insert({
+            'receiver_id': friendId,
+            'sender_id': myId,
+            'type': 'friend_request',
+            'message': 'sent you a friend request.',
+          });
+        }
+        return true;
+      } else if (status == 'PendingSent' || status == 'PendingReceived') {
+        // Already requested or response pending - treat as success to avoid error message
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('CRITICAL: Error in toggleFriend: $e');
+      return false;
+    }
+  }
 
-      if (existing != null) {
-        await client.from('friends').delete().eq('id', existing['id']);
-      } else {
-        await client.from('friends').insert({
-          'user_id': myId,
-          'friend_id': friendId,
-        });
+  static Future<bool> respondToFriendRequest(String notificationId, bool accept) async {
+    try {
+      final notif = await client.from('notifications').select().eq('id', notificationId).single();
+      final senderId = notif['sender_id'];
+      final receiverId = notif['receiver_id'];
+
+      await client.from('notifications').update({
+        'status': accept ? 'accepted' : 'declined'
+      }).eq('id', notificationId);
+
+      if (accept) {
+        await client.from('friends').insert([
+          {'user_id': senderId, 'friend_id': receiverId},
+          {'user_id': receiverId, 'friend_id': senderId},
+        ]);
       }
       return true;
     } catch (e) {
       return false;
     }
-  }
-
-  static Future<void> sendFriendRequest(String receiverId) async {
-    final myId = currentUser?.id;
-    if (myId == null) return;
-
-    await client.from('notifications').insert({
-      'receiver_id': receiverId,
-      'sender_id': myId,
-      'type': 'friend_request',
-      'message': 'sent you a friend request.',
-    });
   }
 
   static Future<bool> deleteAccount() async {

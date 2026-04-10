@@ -45,6 +45,38 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.done_all, size: 20),
+            tooltip: 'Mark all as read',
+            onPressed: () async {
+              await SupabaseService.markAllNotificationsAsRead();
+              _loadNotifications();
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_sweep_outlined, size: 22),
+            tooltip: 'Clear All',
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Clear all?'),
+                  content: const Text('This will permanently delete all notifications.'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Clear All', style: TextStyle(color: Colors.red))),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                await SupabaseService.clearAllNotifications();
+                _loadNotifications();
+              }
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
@@ -74,7 +106,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           backgroundImage: profileUrl != null ? CachedNetworkImageProvider(profileUrl) : null,
                           child: profileUrl == null ? const Icon(Icons.person) : null,
                         ),
-                        title: Text(message, style: TextStyle(fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
+                        title: RichText(
+                          text: TextSpan(
+                            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
+                            children: [
+                              TextSpan(
+                                text: senderProfile?['full_name'] ?? 'Someone',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              TextSpan(text: ' $message'),
+                            ],
+                          ),
+                        ),
                         subtitle: type == 'friend_request' && status == 'pending'
                             ? Padding(
                                 padding: const EdgeInsets.only(top: 8.0),

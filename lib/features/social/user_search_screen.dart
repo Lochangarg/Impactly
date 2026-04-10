@@ -19,6 +19,8 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   List<Map<String, dynamic>> _postResults = [];
   bool _isLoading = false;
   Set<String> _friendIds = {};
+  Set<String> _requestedIds = {};
+  Set<String> _receivedIds = {};
 
   @override
   void initState() {
@@ -28,9 +30,36 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
   Future<void> _loadFriends() async {
     final friends = await SupabaseService.getFriends();
+    final myId = SupabaseService.currentUser?.id;
+    
+    List<dynamic> sentRaw = [];
+    List<dynamic> receivedRaw = [];
+    
+    if (myId != null) {
+      try {
+        sentRaw = await SupabaseService.client
+            .from('notifications')
+            .select('receiver_id')
+            .eq('sender_id', myId)
+            .eq('type', 'friend_request')
+            .eq('status', 'pending');
+            
+        receivedRaw = await SupabaseService.client
+            .from('notifications')
+            .select('sender_id')
+            .eq('receiver_id', myId)
+            .eq('type', 'friend_request')
+            .eq('status', 'pending');
+      } catch (e) {
+        // Fallback for missing columns
+      }
+    }
+
     if (mounted) {
       setState(() {
         _friendIds = friends.map((f) => f['id'].toString()).toSet();
+        _requestedIds = sentRaw.map((r) => r['receiver_id'].toString()).toSet();
+        _receivedIds = receivedRaw.map((r) => r['sender_id'].toString()).toSet();
       });
     }
   }
@@ -56,26 +85,24 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
   Future<void> _toggleFriend(Map<String, dynamic> user) async {
     final userId = user['id'].toString();
+    
+    if (_requestedIds.contains(userId)) return;
+    
+    if (_receivedIds.contains(userId)) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(userId: userId)));
+      return;
+    }
+
     final success = await SupabaseService.toggleFriend(userId);
     if (!mounted) return;
     
     if (success) {
-      final isFriend = _friendIds.contains(userId);
-      if (!isFriend) {
-          SupabaseService.sendFriendRequest(userId);
-      }
-      setState(() {
-        if (isFriend) {
-          _friendIds.remove(userId);
-        } else {
-          _friendIds.add(userId);
-        }
-      });
+      await _loadFriends();
       
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isFriend ? l10n.friend_removed : l10n.friend_added),
+          content: const Text('Interaction updated'),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -176,21 +203,37 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   }
 
   Widget _buildUserTile(Map<String, dynamic> user) {
-    final l10n = AppLocalizations.of(context)!;
     final fullName = user['full_name'] ?? user['username'] ?? 'User';
     final username = user['username'] ?? '';
     final userId = user['id'].toString();
+    
     final isFriend = _friendIds.contains(userId);
+    final isRequested = _requestedIds.contains(userId);
+    final isReceived = _receivedIds.contains(userId);
+    
     final String? profileUrl = user['profile_picture'];
+    final isMe = userId == SupabaseService.currentUser?.id;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5)),
-      ),
+    String btnText = 'Add';
+    if (isFriend) btnText = 'Remove';
+    else if (isRequested) btnText = 'Requested';
+    else if (isReceived) btnText = 'Respond';
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ProfileScreen(userId: userId)),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5)),
+        ),
       child: Row(
         children: [
           CircleAvatar(
@@ -208,18 +251,20 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               ],
             ),
           ),
-          ElevatedButton(
-            onPressed: () => _toggleFriend(user),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isFriend ? Colors.grey[200] : const Color(0xFF6366F1),
-              foregroundColor: isFriend ? Colors.black : Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          if (!isMe)
+            ElevatedButton(
+              onPressed: isRequested ? null : () => _toggleFriend(user),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: (isFriend || isRequested) ? Colors.grey[200] : const Color(0xFF6366F1),
+                foregroundColor: (isFriend || isRequested) ? Colors.black : Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: Text(btnText),
             ),
-            child: Text(isFriend ? 'Remove' : 'Add'),
-          ),
         ],
       ),
-    );
+    ),
+   );
   }
 
   Widget _buildPostTile(Map<String, dynamic> post) {

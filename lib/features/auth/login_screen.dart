@@ -9,6 +9,7 @@ import 'widgets/auth_field.dart';
 import 'widgets/auth_button.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
+import '../language/screens/language_selection_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -94,9 +95,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         icon: const Icon(Icons.translate, size: 20),
                         tooltip: 'Translate Page',
                         onPressed: () {
-                          // TODO: Implement translation logic or language picker
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Translation feature coming soon!")),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LanguageSelectionScreen(),
+                            ),
                           );
                         },
                       ),

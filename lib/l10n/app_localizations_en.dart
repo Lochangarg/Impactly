@@ -201,7 +201,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get event_not_found => 'Event not found';
 
   @override
-  String get joined_successfully => 'Joined successfully! 🚀';
+  String get joined_successfully => 'Joined successfully!';
 
   @override
   String get no_date => 'No date';
