@@ -11,8 +11,8 @@
     <img src="https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart"/>
     <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase"/>
     <img src="https://img.shields.io/badge/Provider-7952B3?style=for-the-badge" alt="Provider"/>
-    <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License"/>
-    <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=for-the-badge" alt="Version"/>
+    <img src="https://img.shields.io/badge/Status-Ready_for_Submission-success?style=for-the-badge" alt="Status"/>
+    <img src="https://img.shields.io/badge/Version-1.1.0-blue?style=for-the-badge" alt="Version"/>
   </p>
   <p align="center">
     <img src="https://img.shields.io/badge/Android-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android"/>
@@ -266,19 +266,22 @@ Users earn **Impact Points** for every meaningful action, driving healthy compet
 - Private one-on-one conversations between community members
 - Message history with real-time updates via Supabase Realtime
 
-### 🤝 Friendship System
+### 🤝 Friendship & Social Hub
 - Search users by name or @username
 - Add/remove friends with a single tap
-- Friend count displayed on profile
+- **Profile Privacy:** Toggle profile visibility to control who can see your activity
+- **In-App Notifications:** Real-time alerts for friend requests, event updates, and social interactions
 
-### 🌐 Bilingual Support
-- Full English and Hindi localisation (100% coverage)
-- On-the-fly content translation via built-in Translation Service
-- Language preference persisted locally
+### 👤 Enhanced User Profiles
+- View your own and others' Impact levels, points, and friendship counts
+- **Joined Events:** A dedicated, private section for users to track all events they have participated in
+- Persistent profile settings including language preferences and account security
 
-### 🌙 Dark Mode
-- Complete dark theme with deep charcoal palette
-- Toggle from Settings — preference saved across sessions
+### 🌐 Bilingual Support & UX
+- **Language Selection:** Full English and Hindi localisation (100% coverage)
+- **Content Translation:** On-the-fly content translation via built-in Translation Service
+- **Dark Mode:** Complete dark theme with deep charcoal palette, toggleable from Settings
+- **Stateful UI:** Real-time feedback for all actions with smooth transitions and persistent preferences
 
 ---
 
