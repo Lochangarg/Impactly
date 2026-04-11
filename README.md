@@ -43,7 +43,7 @@ Despite growing awareness of social responsibility among youth, a significant di
 
 ## 🎬 Demo Video
 
-[![Watch the Impactly Demo](https://img.shields.io/badge/▶_Watch_Demo-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+[![Watch the Impactly Demo](https://img.shields.io/badge/▶_Watch_Demo-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/RvpVpfIHSnM)
 
 > **Click the badge above to watch the full walkthrough on YouTube.**
 
