@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impactly — Where Good Intentions Become Real Actions</title>
+    <meta name="description" content="Impactly is a gamified social-impact mobile platform that connects volunteers with causes that matter. Built with Flutter & Supabase.">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="Impactly_app_icon.png">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#hero" class="nav-logo">
+                <img src="Impactly_app_icon.png" alt="Impactly Logo" class="nav-logo-img">
+                <span>Impactly</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#problem">Problem</a></li>
+                <li><a href="#solution">Solution</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#screenshots">Screens</a></li>
+                <li><a href="#tech">Tech Stack</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#research">Research</a></li>
+                <li><a href="#team">Team</a></li>
+            </ul>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========== HERO SECTION ========== -->
+    <section class="hero" id="hero">
+        <div class="hero-bg-orbs">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                Avantika University · BCS4601 · Design Project 2025–2026
+            </div>
+            <h1 class="hero-title">
+                <span class="title-line">Where Good Intentions</span>
+                <span class="title-line gradient-text">Become Real Actions.</span>
+            </h1>
+            <p class="hero-subtitle">
+                A gamified social-impact mobile platform that connects volunteers with causes that matter — making it easy to discover events, earn rewards, and build a community of changemakers.
+            </p>
+            <div class="hero-cta">
+                <a href="#solution" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                    Explore Project
+                </a>
+                <a href="https://youtu.be/RvpVpfIHSnM" target="_blank" class="btn btn-outline">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    Watch Demo
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-number" data-target="11">0</span>
+                    <span class="stat-label">Feature Modules</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" data-target="8">0</span>
+                    <span class="stat-label">Database Tables</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" data-target="2">0</span>
+                    <span class="stat-label">Languages</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" data-target="4">0</span>
+                    <span class="stat-label">Platforms</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="phone-mockup">
+                <div class="phone-frame">
+                    <img src="home_screen.png" alt="Impactly Home Screen" class="phone-screen">
+                </div>
+                <div class="phone-glow"></div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <div class="mouse">
+                <div class="wheel"></div>
+            </div>
+            <span>Scroll to explore</span>
+        </div>
+    </section>
+
+    <!-- ========== PROBLEM SECTION ========== -->
+    <section class="section section-dark" id="problem">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">The Challenge</span>
+                <h2 class="section-title">The Problem We're Solving</h2>
+                <p class="section-desc">Despite growing social awareness among youth, a significant disconnect exists between the <strong>desire to volunteer</strong> and the <strong>ability to take meaningful action</strong>.</p>
+            </div>
+
+            <div class="problem-grid">
+                <div class="problem-card" data-aos="fade-up" data-delay="0">
+                    <div class="problem-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path><line x1="12" y1="9" x2="12" y2="15" stroke-width="2" stroke-linecap="round"/></svg>
+                    </div>
+                    <div class="problem-stat">60%</div>
+                    <h3>Hard to Find Events</h3>
+                    <p>Students struggle to find volunteer opportunities aligned with their interests, location, and schedule.</p>
+                </div>
+                <div class="problem-card" data-aos="fade-up" data-delay="100">
+                    <div class="problem-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    </div>
+                    <div class="problem-stat">55%</div>
+                    <h3>Scattered Information</h3>
+                    <p>Event info is fragmented across Instagram, WhatsApp groups, notice boards — no single source of truth.</p>
+                </div>
+                <div class="problem-card" data-aos="fade-up" data-delay="200">
+                    <div class="problem-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    </div>
+                    <div class="problem-stat">35%</div>
+                    <h3>Lack of Trust</h3>
+                    <p>Users distrust authenticity of events found through informal social media channels.</p>
+                </div>
+                <div class="problem-card" data-aos="fade-up" data-delay="300">
+                    <div class="problem-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                    </div>
+                    <div class="problem-stat">95%</div>
+                    <h3>Missed Opportunities</h3>
+                    <p>Nearly all respondents reported missing at least one volunteer opportunity due to insufficient information.</p>
+                </div>
+            </div>
+
+            <div class="problem-callout">
+                <div class="callout-icon">💡</div>
+                <div class="callout-text">
+                    <strong>The Gap:</strong> 80%+ of students use Instagram & WhatsApp for event discovery — but these channels lack filtering, event management, progress tracking, and recognition systems. Dedicated platforms like Unstop aren't localised for Indian university students.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SOLUTION SECTION ========== -->
+    <section class="section" id="solution">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Our Answer</span>
+                <h2 class="section-title">Introducing <span class="gradient-text">Impactly</span></h2>
+                <p class="section-desc">A dedicated, mobile-first platform with smart event filtering, gamified engagement, a community feed, and a trust-building social network — all tailored for Indian university students.</p>
+            </div>
+
+            <div class="solution-grid">
+                <div class="solution-card solution-card-large">
+                    <div class="solution-card-header">
+                        <div class="solution-icon-wrap emerald">🎯</div>
+                        <h3>Centralised Event Hub</h3>
+                    </div>
+                    <p>One platform for discovering, filtering, joining, and managing volunteer events — no more scattered WhatsApp forwards.</p>
+                    <div class="solution-visual">
+                        <div class="mini-tag">Category Filters</div>
+                        <div class="category-chips">
+                            <span class="chip">🌱 Environment</span>
+                            <span class="chip">📚 Education</span>
+                            <span class="chip">🐾 Animals</span>
+                            <span class="chip">❤️ Health</span>
+                            <span class="chip">🎵 Music</span>
+                            <span class="chip">🏃 Sports</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-card-header">
+                        <div class="solution-icon-wrap indigo">🎮</div>
+                        <h3>Gamified Impact</h3>
+                    </div>
+                    <p>Earn Impact Points, level up, and compete on a global leaderboard. Turn social good into a rewarding experience.</p>
+                    <div class="points-display">
+                        <div class="points-row"><span>Join Event</span><span class="points-val">+50 pts</span></div>
+                        <div class="points-row"><span>Create Post</span><span class="points-val">+20 pts</span></div>
+                        <div class="points-row"><span>Level Up</span><span class="points-val">Every 500</span></div>
+                    </div>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-card-header">
+                        <div class="solution-icon-wrap purple">📰</div>
+                        <h3>Social Feed</h3>
+                    </div>
+                    <p>Share volunteer experiences with photos, text, and event tags. Like, comment, and engage with the community.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-card-header">
+                        <div class="solution-icon-wrap amber">💬</div>
+                        <h3>Direct Messaging</h3>
+                    </div>
+                    <p>Private conversations between community members with real-time updates via Supabase Realtime.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-card-header">
+                        <div class="solution-icon-wrap rose">🤝</div>
+                        <h3>Social Network</h3>
+                    </div>
+                    <p>Find changemakers, send friend requests, control profile privacy, and receive in-app notifications.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-card-header">
+                        <div class="solution-icon-wrap teal">🌐</div>
+                        <h3>Bilingual + Dark Mode</h3>
+                    </div>
+                    <p>Full English & Hindi localisation with 100% coverage. Beautiful dark mode with deep charcoal palette.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== USP / UNIQUENESS ========== -->
+    <section class="section section-dark" id="uniqueness">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">What Sets Us Apart</span>
+                <h2 class="section-title">Our Unique Edge</h2>
+            </div>
+
+            <div class="usp-grid">
+                <div class="usp-card">
+                    <div class="usp-number">01</div>
+                    <h3>Evidence-Driven Design</h3>
+                    <p>Every feature was validated through primary research (20-person survey) and 7 academic papers. Not assumptions — data.</p>
+                </div>
+                <div class="usp-card">
+                    <div class="usp-number">02</div>
+                    <h3>Indian University Context</h3>
+                    <p>Unlike Unstop or VolunteerMatch, Impactly is built specifically for Indian college students — Hindi support, local categories, and campus-centric events.</p>
+                </div>
+                <div class="usp-card">
+                    <div class="usp-number">03</div>
+                    <h3>Complete Ecosystem</h3>
+                    <p>Not just event listing — a full social-impact ecosystem with feed, messaging, friendships, gamification, and leaderboard in one app.</p>
+                </div>
+                <div class="usp-card">
+                    <div class="usp-number">04</div>
+                    <h3>Real-Time Architecture</h3>
+                    <p>Built on Supabase Realtime subscriptions — live notifications, instant messaging, and reactive state updates without polling.</p>
+                </div>
+                <div class="usp-card">
+                    <div class="usp-number">05</div>
+                    <h3>Row-Level Security</h3>
+                    <p>Every database table has RLS policies. Users can only access their own data. Privacy isn't an afterthought — it's structural.</p>
+                </div>
+                <div class="usp-card">
+                    <div class="usp-number">06</div>
+                    <h3>Cross-Platform, Single Codebase</h3>
+                    <p>One Flutter codebase runs on Android, iOS, Web, and Windows — consistent premium experience everywhere.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FEATURES DEEP DIVE ========== -->
+    <section class="section" id="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Deep Dive</span>
+                <h2 class="section-title">Key Features</h2>
+                <p class="section-desc">A comprehensive look at what makes Impactly a complete social-impact platform.</p>
+            </div>
+
+            <div class="features-timeline">
+                <div class="feature-item">
+                    <div class="feature-connector">
+                        <div class="connector-dot"></div>
+                        <div class="connector-line"></div>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-icon-badge emerald">📅</div>
+                        <h3>Event Discovery & Management</h3>
+                        <ul>
+                            <li>Browse by category — Education, Environment, Animals, Health, Music, Sports</li>
+                            <li>Real-time search with text filtering</li>
+                            <li>One-tap event joining with instant points</li>
+                            <li>Create events with full details — title, description, category, location, date, reward points</li>
+                            <li>Track all joined events in your private profile section</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-connector">
+                        <div class="connector-dot"></div>
+                        <div class="connector-line"></div>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-icon-badge indigo">🏆</div>
+                        <h3>Gamification System</h3>
+                        <ul>
+                            <li>Impact Points for every meaningful action</li>
+                            <li>Level progression system (every 500 points)</li>
+                            <li>Global Leaderboard with Top 3 podium display (🥇🥈🥉)</li>
+                            <li>Healthy competition driving sustained engagement</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-connector">
+                        <div class="connector-dot"></div>
+                        <div class="connector-line"></div>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-icon-badge purple">📰</div>
+                        <h3>Community Feed</h3>
+                        <ul>
+                            <li>Share volunteer experiences with photos, text, and event tags</li>
+                            <li>Like ❤️ and Comment 💬 on community posts</li>
+                            <li>Premium card-based layout inspired by modern social platforms</li>
+                            <li>On-the-fly content translation for Hindi users</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-connector">
+                        <div class="connector-dot"></div>
+                        <div class="connector-line"></div>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-icon-badge amber">🔐</div>
+                        <h3>Authentication & Security</h3>
+                        <ul>
+                            <li>Email/Password auth via Supabase Auth</li>
+                            <li>Forgot/Reset password flow with deep linking</li>
+                            <li>Row-Level Security (RLS) on all database tables</li>
+                            <li>Profile privacy toggle — control who sees your activity</li>
+                            <li>Secure environment variable management via .env</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-connector">
+                        <div class="connector-dot"></div>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-icon-badge rose">🌐</div>
+                        <h3>Accessibility & UX</h3>
+                        <ul>
+                            <li>Full bilingual support — English & Hindi (100% coverage)</li>
+                            <li>Dark mode with deep charcoal palette (#111827)</li>
+                            <li>Material 3 design language with Inter typography</li>
+                            <li>Persistent preferences (language, theme) via SharedPreferences</li>
+                            <li>OTA update checker for seamless version management</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SCREENSHOTS ========== -->
+    <section class="section section-dark" id="screenshots">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">App Showcase</span>
+                <h2 class="section-title">See It In Action</h2>
+                <p class="section-desc">Real screenshots from the working Impactly application.</p>
+            </div>
+
+            <div class="screenshots-carousel">
+                <div class="screenshot-card">
+                    <div class="screenshot-frame">
+                        <img src="home_screen.png" alt="Home Dashboard" loading="lazy">
+                    </div>
+                    <div class="screenshot-info">
+                        <h4>Home Dashboard</h4>
+                        <p>Personalised greeting, category chips, and recent volunteer events at a glance.</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <div class="screenshot-frame">
+                        <img src="events_discovery.png" alt="Events Discovery" loading="lazy">
+                    </div>
+                    <div class="screenshot-info">
+                        <h4>Event Discovery</h4>
+                        <p>Search, filter by category, and browse all available volunteer events.</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <div class="screenshot-frame">
+                        <img src="community_feed.png" alt="Community Feed" loading="lazy">
+                    </div>
+                    <div class="screenshot-info">
+                        <h4>Community Feed</h4>
+                        <p>Social media-style feed with posts, likes, comments, and event tags.</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <div class="screenshot-frame">
+                        <img src="leaderboard.png" alt="Leaderboard" loading="lazy">
+                    </div>
+                    <div class="screenshot-info">
+                        <h4>Leaderboard</h4>
+                        <p>Global Impact Points ranking with Top 3 podium and competitive engagement.</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <div class="screenshot-frame">
+                        <img src="profile.png" alt="Profile" loading="lazy">
+                    </div>
+                    <div class="screenshot-info">
+                        <h4>User Profile</h4>
+                        <p>Impact stats, level progression, interests, and personalised settings.</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <div class="screenshot-frame">
+                        <img src="chat.png" alt="Direct Messages" loading="lazy">
+                    </div>
+                    <div class="screenshot-info">
+                        <h4>Direct Messages</h4>
+                        <p>Private one-on-one conversations with real-time message delivery.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== TECH STACK ========== -->
+    <section class="section" id="tech">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Under The Hood</span>
+                <h2 class="section-title">Technology Stack</h2>
+                <p class="section-desc">Modern, production-ready technologies chosen for performance, scalability, and developer experience.</p>
+            </div>
+
+            <div class="tech-grid">
+                <div class="tech-card tech-card-featured">
+                    <div class="tech-logo">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="#02569B"/><path d="M2 17l10 5 10-5" stroke="#02569B" stroke-width="2"/><path d="M2 12l10 5 10-5" stroke="#02569B" stroke-width="2"/></svg>
+                    </div>
+                    <h4>Flutter 3.41.6</h4>
+                    <p>Cross-platform UI framework</p>
+                    <span class="tech-badge">Framework</span>
+                </div>
+                <div class="tech-card tech-card-featured">
+                    <div class="tech-logo">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="#3FCF8E" opacity="0.2"/><path d="M12 6v6l4 2" stroke="#3FCF8E" stroke-width="2" stroke-linecap="round"/></svg>
+                    </div>
+                    <h4>Supabase</h4>
+                    <p>Auth, Database, Storage, Realtime</p>
+                    <span class="tech-badge">Backend</span>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-logo-text">🎯</div>
+                    <h4>Dart ≥ 3.0.0</h4>
+                    <p>Primary language</p>
+                    <span class="tech-badge">Language</span>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-logo-text">🐘</div>
+                    <h4>PostgreSQL</h4>
+                    <p>Relational database via Supabase</p>
+                    <span class="tech-badge">Database</span>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-logo-text">🔄</div>
+                    <h4>Provider 6.1.2</h4>
+                    <p>Reactive state with ChangeNotifier</p>
+                    <span class="tech-badge">State</span>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-logo-text">🌍</div>
+                    <h4>flutter_localizations</h4>
+                    <p>ARB-based EN/HI support</p>
+                    <span class="tech-badge">i18n</span>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-logo-text">🖼️</div>
+                    <h4>image_picker + cropper</h4>
+                    <p>Camera, gallery, and cropping</p>
+                    <span class="tech-badge">Media</span>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-logo-text">🔗</div>
+                    <h4>app_links</h4>
+                    <p>Deep linking for password recovery</p>
+                    <span class="tech-badge">Navigation</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== ARCHITECTURE ========== -->
+    <section class="section section-dark" id="architecture">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">System Design</span>
+                <h2 class="section-title">Architecture</h2>
+                <p class="section-desc">Feature-first architecture with clean separation of concerns.</p>
+            </div>
+
+            <div class="arch-layout">
+                <div class="arch-diagram">
+                    <div class="arch-layer client-layer">
+                        <div class="layer-label">📱 Client Layer — Flutter</div>
+                        <div class="layer-boxes">
+                            <div class="arch-box">
+                                <span class="arch-box-title">UI Screens</span>
+                                <span class="arch-box-sub">Flutter Widgets</span>
+                            </div>
+                            <div class="arch-arrow-down">↓</div>
+                            <div class="arch-box">
+                                <span class="arch-box-title">State Management</span>
+                                <span class="arch-box-sub">Provider (ChangeNotifier)</span>
+                            </div>
+                            <div class="arch-arrow-down">↓</div>
+                            <div class="arch-box">
+                                <span class="arch-box-title">Core Services</span>
+                                <span class="arch-box-sub">SupabaseService, ImpactService</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="arch-connector">
+                        <svg width="24" height="48" viewBox="0 0 24 48"><line x1="12" y1="0" x2="12" y2="48" stroke="#6366F1" stroke-width="2" stroke-dasharray="4"/></svg>
+                    </div>
+                    <div class="arch-layer backend-layer">
+                        <div class="layer-label">☁️ Backend Layer — Supabase</div>
+                        <div class="layer-boxes layer-boxes-row">
+                            <div class="arch-box arch-box-sm">
+                                <span class="arch-box-icon">🔐</span>
+                                <span class="arch-box-title">Auth</span>
+                            </div>
+                            <div class="arch-box arch-box-sm">
+                                <span class="arch-box-icon">🗄️</span>
+                                <span class="arch-box-title">PostgreSQL</span>
+                            </div>
+                            <div class="arch-box arch-box-sm">
+                                <span class="arch-box-icon">📦</span>
+                                <span class="arch-box-title">Storage</span>
+                            </div>
+                            <div class="arch-box arch-box-sm">
+                                <span class="arch-box-icon">⚡</span>
+                                <span class="arch-box-title">Realtime</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arch-sidebar">
+                    <h3>Database Schema</h3>
+                    <div class="schema-table">
+                        <div class="schema-row schema-header">
+                            <span>Table</span>
+                            <span>Purpose</span>
+                        </div>
+                        <div class="schema-row"><span><code>profiles</code></span><span>User data, points, level</span></div>
+                        <div class="schema-row"><span><code>events</code></span><span>Volunteer events</span></div>
+                        <div class="schema-row"><span><code>user_events</code></span><span>Participation records</span></div>
+                        <div class="schema-row"><span><code>posts</code></span><span>Community feed posts</span></div>
+                        <div class="schema-row"><span><code>comments</code></span><span>Post comments</span></div>
+                        <div class="schema-row"><span><code>friends</code></span><span>Social graph</span></div>
+                        <div class="schema-row"><span><code>messages</code></span><span>Direct messaging</span></div>
+                        <div class="schema-row"><span><code>notifications</code></span><span>Alerts & updates</span></div>
+                    </div>
+                    <div class="rls-badge">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        All tables have Row-Level Security enabled
+                    </div>
+                </div>
+            </div>
+
+            <div class="folder-structure">
+                <h3>Project Structure</h3>
+                <div class="folder-tree">
+                    <pre><code>Impactly/
+├── lib/
+│   ├── core/               ← Shared foundation
+│   │   ├── config/          → Env (Supabase URL & keys)
+│   │   ├── constants/       → App-wide static values
+│   │   ├── models/          → Event, UserStats, etc.
+│   │   ├── navigation/      → BottomNavigationBar
+│   │   ├── providers/       → EventProvider, LocaleProvider, ThemeProvider
+│   │   ├── services/        → SupabaseService, ImpactService, LeaderboardService
+│   │   ├── theme/           → Light/Dark themes, colours, typography
+│   │   └── utils/           → LevelUtils, VersionUtils
+│   │
+│   ├── features/            ← Feature modules (self-contained)
+│   │   ├── auth/            → Login, Signup, Forgot/Reset Password
+│   │   ├── chat/            → Direct Messages
+│   │   ├── events/          → Discovery, Details, Creation
+│   │   ├── feed/            → Community Feed, Posts, Likes, Comments
+│   │   ├── home/            → Dashboard, Categories, Notifications
+│   │   ├── language/        → EN/HI Selection
+│   │   ├── leaderboard/     → Global Rankings
+│   │   ├── onboarding/      → Interest Selection
+│   │   ├── profile/         → Profile, Settings, Account
+│   │   ├── social/          → User Search, Friendships
+│   │   └── update/          → OTA Update Checker
+│   │
+│   ├── l10n/                ← Localisation (ARB files)
+│   └── main.dart            ← Entry point
+│
+├── docs/                    ← Reports, Wireframes, Schema docs
+└── assets/                  ← Icons, Screenshots</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== RESEARCH ========== -->
+    <section class="section" id="research">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Evidence-Based</span>
+                <h2 class="section-title">Research & Methodology</h2>
+                <p class="section-desc">Our design decisions are grounded in primary user research and academic literature.</p>
+            </div>
+
+            <div class="research-grid">
+                <div class="research-card methodology-card">
+                    <h3>🧠 Design Thinking Process</h3>
+                    <div class="methodology-steps">
+                        <div class="method-step active">
+                            <div class="step-num">1</div>
+                            <div class="step-info">
+                                <h4>Empathise</h4>
+                                <p>20-person survey + 7 academic papers</p>
+                            </div>
+                        </div>
+                        <div class="method-step">
+                            <div class="step-num">2</div>
+                            <div class="step-info">
+                                <h4>Define</h4>
+                                <p>User personas & problem statements</p>
+                            </div>
+                        </div>
+                        <div class="method-step">
+                            <div class="step-num">3</div>
+                            <div class="step-info">
+                                <h4>Ideate</h4>
+                                <p>Feature brainstorming & prioritisation</p>
+                            </div>
+                        </div>
+                        <div class="method-step">
+                            <div class="step-num">4</div>
+                            <div class="step-info">
+                                <h4>Prototype</h4>
+                                <p>Miro wireframes → Flutter prototype</p>
+                            </div>
+                        </div>
+                        <div class="method-step">
+                            <div class="step-num">5</div>
+                            <div class="step-info">
+                                <h4>Test</h4>
+                                <p>Usability testing with 3 real users</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="research-card survey-card">
+                    <h3>📊 Key Survey Findings</h3>
+                    <div class="survey-findings">
+                        <div class="finding-bar">
+                            <div class="finding-label">Instagram for event discovery</div>
+                            <div class="bar-track">
+                                <div class="bar-fill" style="--fill-width: 75%;">75%</div>
+                            </div>
+                        </div>
+                        <div class="finding-bar">
+                            <div class="finding-label">Want event filtering</div>
+                            <div class="bar-track">
+                                <div class="bar-fill emerald" style="--fill-width: 70%;">70%</div>
+                            </div>
+                        </div>
+                        <div class="finding-bar">
+                            <div class="finding-label">Hard to find relevant events</div>
+                            <div class="bar-track">
+                                <div class="bar-fill amber" style="--fill-width: 60%;">60%</div>
+                            </div>
+                        </div>
+                        <div class="finding-bar">
+                            <div class="finding-label">Want community interaction</div>
+                            <div class="bar-track">
+                                <div class="bar-fill purple" style="--fill-width: 55%;">55%</div>
+                            </div>
+                        </div>
+                        <div class="finding-bar">
+                            <div class="finding-label">Missed events due to info gap</div>
+                            <div class="bar-track">
+                                <div class="bar-fill rose" style="--fill-width: 95%;">95%</div>
+                            </div>
+                        </div>
+                        <div class="finding-bar">
+                            <div class="finding-label">Would use Impactly</div>
+                            <div class="bar-track">
+                                <div class="bar-fill" style="--fill-width: 85%;">85%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="personas-section">
+                <h3 class="personas-title">👤 User Personas</h3>
+                <div class="persona-grid">
+                    <div class="persona-card">
+                        <div class="persona-avatar">
+                            <div class="avatar-circle">A</div>
+                        </div>
+                        <div class="persona-info">
+                            <h4>Arjun Mehta</h4>
+                            <span class="persona-role">The Enthusiastic Volunteer</span>
+                            <p class="persona-bio">20-year-old B.Tech student passionate about environment & education. Misses events because info is scattered across platforms.</p>
+                            <div class="persona-goals">
+                                <span class="goal-tag">Discover Events</span>
+                                <span class="goal-tag">Track Impact</span>
+                                <span class="goal-tag">Connect Peers</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="persona-card">
+                        <div class="persona-avatar">
+                            <div class="avatar-circle alt">P</div>
+                        </div>
+                        <div class="persona-info">
+                            <h4>Priya Sharma</h4>
+                            <span class="persona-role">The Busy Organiser</span>
+                            <p class="persona-bio">22-year-old BBA student & club president. Struggles with promoting events beyond WhatsApp broadcasts and Instagram stories.</p>
+                            <div class="persona-goals">
+                                <span class="goal-tag">Reach Wider Audience</span>
+                                <span class="goal-tag">Manage Events</span>
+                                <span class="goal-tag">Track Attendance</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="usability-section">
+                <h3>🧪 Usability Testing Results</h3>
+                <div class="usability-grid">
+                    <div class="usability-stat">
+                        <div class="usability-value">100%</div>
+                        <div class="usability-label">Task 1: Account Creation</div>
+                    </div>
+                    <div class="usability-stat">
+                        <div class="usability-value">100%</div>
+                        <div class="usability-label">Task 2: Join Event</div>
+                    </div>
+                    <div class="usability-stat">
+                        <div class="usability-value">100%</div>
+                        <div class="usability-label">Task 4: Add Friend</div>
+                    </div>
+                    <div class="usability-stat">
+                        <div class="usability-value">67%</div>
+                        <div class="usability-label">Task 3: Create Post (1st try)</div>
+                    </div>
+                </div>
+                <p class="usability-note">All tasks completed successfully. Minor iterations were made to improve FAB discoverability and leaderboard access.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== ROADMAP ========== -->
+    <section class="section section-dark" id="roadmap">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">What's Next</span>
+                <h2 class="section-title">Future Roadmap</h2>
+            </div>
+
+            <div class="roadmap-grid">
+                <div class="roadmap-card">
+                    <div class="roadmap-icon">🗺️</div>
+                    <h4>Map Integration</h4>
+                    <p>Interactive maps with location-based event filtering and GPS-powered discovery.</p>
+                </div>
+                <div class="roadmap-card">
+                    <div class="roadmap-icon">🏅</div>
+                    <h4>Badges & Certificates</h4>
+                    <p>Verifiable digital certificates and milestone badges for volunteering achievements.</p>
+                </div>
+                <div class="roadmap-card">
+                    <div class="roadmap-icon">📴</div>
+                    <h4>Offline Mode</h4>
+                    <p>Local caching of events and posts for areas with intermittent connectivity.</p>
+                </div>
+                <div class="roadmap-card">
+                    <div class="roadmap-icon">🤖</div>
+                    <h4>AI Recommendations</h4>
+                    <p>Personalised event suggestions powered by user activity analysis and ML.</p>
+                </div>
+                <div class="roadmap-card">
+                    <div class="roadmap-icon">🔔</div>
+                    <h4>Push Notifications</h4>
+                    <p>Native push via Firebase Cloud Messaging for real-time alerts.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== TEAM ========== -->
+    <section class="section" id="team">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">The Builders</span>
+                <h2 class="section-title">Meet The Team</h2>
+            </div>
+
+            <div class="team-grid">
+                <div class="team-card">
+                    <div class="team-avatar">
+                        <div class="avatar-circle team-avatar-1">PK</div>
+                    </div>
+                    <h4>Parikshit Kurel</h4>
+                    <span class="team-id">PU02424EUG10010</span>
+                    <span class="team-role">Full-Stack Developer & Technical Lead</span>
+                    <p>System architecture, Supabase integration, authentication, event management & deployment.</p>
+                </div>
+                <div class="team-card">
+                    <div class="team-avatar">
+                        <div class="avatar-circle team-avatar-2">LG</div>
+                    </div>
+                    <h4>Lochan Garg</h4>
+                    <span class="team-id">PU02424EUG10018</span>
+                    <span class="team-role">Full-Stack Developer & Design Lead</span>
+                    <p>User research, Miro wireframing, community feed implementation, sociometric features & QA testing.</p>
+                </div>
+            </div>
+
+            <div class="team-note">
+                <p>Both team members worked equally across all phases — from research and design to development, testing, and documentation. All code and design decisions were produced through <strong>pair programming and collaborative review</strong>.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="Impactly_app_icon.png" alt="Impactly" class="footer-logo">
+                    <span class="footer-name">Impactly</span>
+                    <p class="footer-tagline">Turn intention into impact.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/Lochangarg/Impactly" target="_blank" class="footer-link">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        GitHub
+                    </a>
+                    <a href="https://youtu.be/RvpVpfIHSnM" target="_blank" class="footer-link">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/><polygon points="9.545 15.568 15.818 12 9.545 8.432" fill="#fff"/></svg>
+                        Demo Video
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Built with ❤️ by Parikshit Kurel & Lochan Garg</p>
+                <p>Avantika University · School of Engineering · BCS4601 · 2025–2026</p>
+                <p class="footer-license">Licensed under MIT License</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

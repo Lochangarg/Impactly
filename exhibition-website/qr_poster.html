@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Impactly Premium QR Poster</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <style>
+        body {
+            background: #0A0A0F;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+        .poster {
+            position: relative;
+            width: 800px;
+            height: 1000px;
+            background: linear-gradient(145deg, #11111d, #0A0A0F);
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+            padding: 40px;
+            text-align: center;
+        }
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            z-index: -1;
+        }
+        .orb-1 { width: 400px; height: 400px; background: #6366F1; top: -100px; left: -100px; }
+        .orb-2 { width: 300px; height: 300px; background: #10B981; bottom: -50px; right: -50px; }
+        
+        #canvas {
+            background: white;
+            padding: 15px;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            margin-bottom: 40px;
+        }
+        h1 { font-size: 48px; margin: 0 0 10px 0; background: linear-gradient(to right, #6366F1, #A855F7, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p { font-size: 20px; color: #9CA3AF; margin: 0 0 40px 0; }
+        .footer-logo { width: 60px; height: 60px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    
+    <div class="poster">
+        <h1>Scan to Download</h1>
+        <p>Get the Impactly APK v1.0.0 directly from GitHub</p>
+        
+        <div id="canvas"></div>
+        
+        <!-- Footer removed -->
+    </div>
+
+    <script type="text/javascript">
+        const qrCode = new QRCodeStyling({
+            width: 500,
+            height: 500,
+            type: "svg",
+            data: "https://github.com/Lochangarg/Impactly/releases/download/v1.0.0/Impactly.apk",
+            image: "Impactly_app_icon.png",
+            dotsOptions: { color: "#0A0A0F", type: "extra-rounded" },
+            backgroundOptions: { color: "#FFFFFF" },
+            imageOptions: { margin: 5, imageSize: 0.4 },
+            cornersSquareOptions: { color: "#6366F1", type: "extra-rounded" }
+        });
+        qrCode.append(document.getElementById("canvas"));
+    </script>
+</body>
+</html>

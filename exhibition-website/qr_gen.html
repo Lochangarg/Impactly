@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Generator</title>
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+</head>
+<body style="background: #0A0A0F; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+    <div id="canvas"></div>
+    <script type="text/javascript">
+        const qrCode = new QRCodeStyling({
+            width: 1000,
+            height: 1000,
+            type: "svg",
+            data: "https://github.com/Lochangarg/Impactly/releases/download/v1.0.0/Impactly.apk",
+            image: "Impactly_app_icon.png",
+            dotsOptions: {
+                color: "#6366F1",
+                type: "extra-rounded"
+            },
+            backgroundOptions: {
+                color: "#0A0A0F",
+            },
+            imageOptions: {
+                crossOrigin: "anonymous",
+                margin: 5,
+                imageSize: 0.4
+            },
+            cornersSquareOptions: {
+                color: "#10B981",
+                type: "extra-rounded"
+            },
+            cornersDotOptions: {
+                color: "#10B981",
+                type: "dot"
+            }
+        });
+
+        qrCode.append(document.getElementById("canvas"));
+    </script>
+</body>
+</html>
